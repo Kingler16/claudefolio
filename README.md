@@ -1,367 +1,281 @@
 # claudefolio
 
-Your AI-powered personal wealth advisor. Automated portfolio monitoring, market analysis, and investment briefings delivered via Telegram. Runs on Claude Code with your existing Max/Pro subscription — no API costs.
+Your AI-powered personal wealth advisor. Automated portfolio monitoring, market analysis, and investment briefings — delivered via Telegram and a self-hosted web dashboard.
 
-Built on Claude Code CLI, it combines real-time market data, macroeconomic analysis, and persistent memory to provide contextualized investment insights — not generic stock tips.
+Runs on Claude Code with your existing Max/Pro subscription — no API costs.
 
 ## What It Does
 
-Twice a week (configurable), claudefolio collects market data for your entire portfolio, pulls macroeconomic indicators, searches for relevant news, and feeds everything into Claude with a specialized financial analyst system prompt. The result is a comprehensive briefing delivered straight to your Telegram -- like having a CFA on retainer.
+Twice a week (configurable), claudefolio collects market data for your entire portfolio, pulls macroeconomic indicators, searches for relevant news, and feeds everything into Claude with a specialized financial analyst system prompt. The result is a comprehensive briefing delivered straight to your Telegram and viewable on a professional web dashboard — like having a CFA on retainer.
 
 ## Features
 
-- **Bi-weekly Portfolio Briefings** -- Scheduled market analysis with portfolio-specific insights, delivered via Telegram
-- **Monthly Reports** -- Performance review, top/bottom performers, lessons learned
-- **On-Demand Ticker Analysis** -- Send any ticker to the Telegram bot for a deep-dive analysis
-- **Free-Form Chat** -- Ask your advisor anything about your portfolio via Telegram
-- **Trade Tracking** -- Tell the bot about buys/sells in natural language, it updates your portfolio automatically
-- **Watchlist Management** -- Track tickers you're interested in
-- **Persistent Memory** -- Remembers past briefings, tracks recommendation outcomes, avoids repetition
-- **Tax-Loss Harvesting** -- Identifies tax optimization opportunities (configurable tax regime)
-- **Benchmark Comparison** -- Compares your portfolio against S&P 500, NASDAQ, DAX, Gold, BTC
-- **Earnings Calendar** -- Alerts you to upcoming earnings for your positions
-- **Multi-Account Support** -- Track positions across multiple brokers
-- **EUR/USD Conversion** -- Correct P&L calculation for mixed-currency portfolios
+### Web Dashboard
+- **Portfolio Overview** — KPI cards, allocation donut chart, sortable holdings table
+- **Vermögensentwicklung** — TradingView-powered line chart with monthly snapshots
+- **Analysis** — Benchmark comparison, monthly returns heatmap, tax-loss harvesting, sector/currency breakdown
+- **Market Overview** — Index grid, US/EU macro data, Fear & Greed gauge, earnings calendar
+- **Briefing History** — Expandable AI briefings with market regime and key insights
+- **Recommendations Tracker** — Active BUY/SELL/WATCH with one-click close, hit-rate tracking
+- **Trade Logging** — Log buys/sells directly from the web (auto-closes matching recommendations)
+- **Settings Page** — Configure API keys, language, schedule from the browser
+- **Dark Theme** — Professional financial dashboard look with accessible colors
+- **Responsive** — Works on desktop, tablet, and mobile
+- **Multi-Language** — German and English, switchable in settings
 
-## Example Briefing (Anonymized)
+### Telegram Bot
+- **Bi-weekly Briefings** — Scheduled market analysis with portfolio-specific insights
+- **Monthly Reports** — Performance review with optional PDF export
+- **On-Demand Analysis** — Send any ticker for a deep-dive
+- **Free-Form Chat** — Ask your advisor anything about your portfolio
+- **Trade Tracking** — Natural language trade logging (`"Bought 10 AAPL @ 180"`)
+- **Watchlist** — Track tickers you're interested in
 
-```
-MARKTLAGE
+### Intelligence
+- **Persistent Memory** — Remembers past briefings, tracks recommendation outcomes, avoids repetition
+- **Tax-Loss Harvesting** — Identifies tax optimization opportunities (configurable tax regime)
+- **Benchmark Comparison** — Portfolio vs S&P 500, NASDAQ, DAX, ATX, Gold, BTC
+- **Earnings Calendar** — Alerts for upcoming earnings on your positions
+- **Insider Activity** — Tracks insider buys/sells
+- **Sentiment Analysis** — Finnhub + Bloomberg RSS news sentiment
+- **Multi-Account** — Track positions across multiple brokers with EUR/USD conversion
+- **Recommendation Dedup** — New recommendations replace old ones for the same ticker
 
-Relief-Rally (NASDAQ +4.4%, VIX -22%) aendert nichts am Extreme-Fear-Regime.
-Yield Curve normal (+52bps), aber Credit Spreads weiten sich. EUR/USD bei 1.15
-frisst USD-Gewinne systematisch auf.
+## Screenshots
 
-PORTFOLIO-CHECK
+### Dashboard
+Portfolio overview with KPI cards, allocation chart, and holdings table.
 
-ASML: Staerkster Gewinner (+63% total), aber underperformed am Rally-Tag
-(-2.2% vs DAX +3.9%). Nervositaet vor Earnings am 15.4 -- Stop-Loss bei
-1050 EUR empfohlen.
-
-Gold ETC: -1.8% in EUR trotz +3.4% Goldpreis in USD. Das ist der EUR/USD-
-Effekt in Reinform.
-
-EMPFEHLUNGEN
-
-Keine neuen Trades. 14 von 17 Positionen reporten in den naechsten 6 Wochen.
-Cash-Quote von 31% ist im Extreme-Fear-Umfeld eine Staerke, nicht Schwaeche.
-Abwarten.
-
-RISIKEN AUF DEM RADAR
-
-- Geopolitik (Hormuz/Iran) bleibt Tail-Risk
-- Earnings-Saison kann Volatilitaet verstaerken
-- EUR-Staerke als systematischer Headwind auf USD-Exposure
-```
+### Market
+Index grid with descriptions, macro data, and Fear & Greed gauge.
 
 ## Architecture
 
 ```
 claudefolio/
 ├── config/
-│   ├── settings.json          # API keys & schedule (git-ignored)
-│   ├── portfolio.json         # Your portfolio positions (git-ignored)
-│   └── watchlist.json         # Tickers you're watching
+│   ├── settings.json            # API keys & schedule (git-ignored)
+│   ├── portfolio.json           # Your positions (git-ignored)
+│   └── watchlist.json           # Tracked tickers
 ├── src/
-│   ├── main.py                # Orchestrator (briefing/monthly/analyze/bot modes)
+│   ├── main.py                  # Orchestrator (briefing/monthly/analyze/bot/web)
 │   ├── data/
-│   │   ├── market.py          # Stock prices & fundamentals (yfinance)
-│   │   ├── macro.py           # Macro data (FRED API, ECB, Fear & Greed)
-│   │   ├── news.py            # News search (Brave Search API)
-│   │   └── calendar.py        # Earnings calendar (yfinance)
+│   │   ├── market.py            # Stock prices & fundamentals (yfinance)
+│   │   ├── macro.py             # Macro data (FRED, ECB, Fear & Greed)
+│   │   ├── news.py              # News (Brave Search, Bloomberg RSS, Finnhub)
+│   │   ├── calendar.py          # Earnings & macro event calendar
+│   │   └── cache.py             # JSON cache for dashboard
 │   ├── analysis/
-│   │   ├── claude.py          # Claude Code CLI wrapper
-│   │   ├── prompt.py          # System prompt & data formatting
-│   │   ├── memory.py          # Persistent memory system
-│   │   ├── performance.py     # Benchmarks, tax-loss harvesting, rec tracking
-│   │   └── chat_history.py    # Telegram conversation history
-│   └── delivery/
-│       └── telegram.py        # Telegram bot & message delivery
-├── memory/                    # Persistent state (git-ignored)
-│   ├── briefings.json         # Past briefing summaries
-│   ├── recommendations.json   # Open/closed recommendations
-│   ├── notes.json             # Market regime, position theses, insights
-│   └── chat_history.json      # Recent Telegram conversations
+│   │   ├── claude.py            # Claude Code CLI wrapper
+│   │   ├── prompt.py            # System prompt & data formatting
+│   │   ├── memory.py            # Persistent memory system
+│   │   ├── performance.py       # Benchmarks, tax-loss harvesting
+│   │   └── chat_history.py      # Telegram conversation history
+│   ├── delivery/
+│   │   ├── telegram.py          # Telegram bot & trade logging
+│   │   └── pdf_report.py        # Monthly PDF reports (optional)
+│   └── web/
+│       ├── app.py               # FastAPI application
+│       ├── i18n.py              # German/English translations
+│       ├── services/
+│       │   ├── portfolio_service.py  # Portfolio calculations
+│       │   └── cache_service.py      # Cache access layer
+│       ├── templates/           # Jinja2 HTML templates
+│       └── static/              # CSS, JS, vendored libs
+├── memory/                      # Persistent state (git-ignored)
+│   ├── cache/                   # Cached market data for dashboard
+│   ├── briefings.json           # Past briefing summaries
+│   ├── recommendations.json     # Open/closed recommendations
+│   └── notes.json               # Market regime, theses, insights
 ├── scripts/
-│   ├── deploy.sh              # Deploy to remote server
-│   └── setup_rockpi.sh        # Server setup (RockPi/Raspberry Pi)
-├── setup.sh                   # Local setup script
-└── requirements.txt           # Python dependencies
+│   ├── deploy.sh                # Deploy to remote server
+│   └── setup_rockpi.sh          # Server setup (RockPi/Raspberry Pi)
+├── setup.py                     # Interactive setup wizard
+└── requirements.txt
 ```
 
 ### Data Flow
 
 ```
-[Cron / Telegram Command]
+[Cron / Telegram / Web Refresh]
         │
         ▼
     main.py (orchestrator)
         │
         ├── data/market.py     → yfinance (prices, fundamentals, insiders)
-        ├── data/macro.py      → FRED API (US), ECB API (EU), CNN Fear & Greed
-        ├── data/news.py       → Brave Search API
-        └── data/calendar.py   → yfinance (earnings dates)
+        ├── data/macro.py      → FRED (US), ECB (EU), CNN Fear & Greed
+        ├── data/news.py       → Brave Search + Bloomberg RSS + Finnhub
+        └── data/calendar.py   → Earnings dates, macro events
+        │
+        ├──→ data/cache.py     → JSON cache for web dashboard
         │
         ▼
-    analysis/prompt.py         → Builds structured prompt with all data
+    analysis/prompt.py         → Builds structured prompt
         │
         ▼
-    analysis/claude.py         → Claude Code CLI (--print mode, Opus model)
+    analysis/claude.py         → Claude Code CLI (--print, Opus, high effort)
         │
         ▼
     analysis/memory.py         → Saves summary, recommendations, theses
         │
-        ▼
-    delivery/telegram.py       → Sends formatted briefing to Telegram
+        ├──→ delivery/telegram.py  → Telegram message
+        └──→ web/app.py            → Web dashboard (reads from cache + memory)
 ```
 
 ### How Claude Is Used
 
-This project does **not** use the Claude API directly. Instead, it shells out to the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) in `--print` mode. This means:
+This project does **not** use the Claude API directly. Instead, it shells out to the [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) in `--print` mode:
 
-- No API key management for Claude -- it uses your Claude Max/Pro subscription
-- Access to the latest models (Opus) with high effort mode
-- The CLI handles authentication, rate limiting, and token management
-- Prompts are passed via stdin, so there is no length limitation from command-line arguments
+- No API key needed for Claude — uses your Max/Pro subscription
+- Access to Opus model with high effort mode
+- Prompts via stdin (no length limits)
+- Auto-detects CLI path for cron/systemd environments
 
 ## Prerequisites
 
 - **Python 3.11+**
-- **Claude Code CLI** -- requires a Claude Max or Pro subscription
+- **Claude Code CLI** — requires Claude Max or Pro subscription
   - Install: `npm install -g @anthropic-ai/claude-code`
   - Authenticate: `claude auth`
-- **Telegram Bot** -- create one via [@BotFather](https://t.me/BotFather)
-- **Brave Search API key** -- free tier available at [brave.com/search/api](https://brave.com/search/api/)
-- **FRED API key** -- free at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html)
+- **Telegram Bot** — create via [@BotFather](https://t.me/BotFather)
+
+Optional but recommended:
+- **Brave Search API** — free tier (2,000/month) at [brave.com/search/api](https://brave.com/search/api/)
+- **FRED API** — free at [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html)
+- **Finnhub API** — free at [finnhub.io](https://finnhub.io/)
 
 ## Quick Start
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/claudefolio.git
+git clone https://github.com/Kingler16/claudefolio.git
 cd claudefolio
 
-# Run the interactive setup wizard
+# Interactive setup wizard
 python3 setup.py
 
-# This will guide you through:
-#   → Language selection
-#   → Country & tax regime
-#   → Telegram bot setup
-#   → API keys (Brave Search, FRED)
-#   → Briefing schedule
-#   → Portfolio configuration
-#   → Dependency installation
-
-# Activate the virtual environment
+# Activate virtual environment
 source venv/bin/activate
 
 # Run your first briefing
 python -m src.main briefing
 
-# Or start the Telegram bot
+# Start the Telegram bot
 python -m src.main bot
+
+# Start the web dashboard
+python -m src.main web
+# → Open http://localhost:8080
 ```
 
-## Configuration
-
-### settings.json
-
-| Key | Description |
-|-----|-------------|
-| `telegram.bot_token` | Telegram bot token from @BotFather |
-| `telegram.chat_id` | Your Telegram chat ID (see below) |
-| `brave_search.api_key` | Brave Search API key for news |
-| `fred.api_key` | FRED API key for US macro data |
-| `schedule.briefing_days` | Days for automated briefings (e.g., `["monday", "thursday"]`) |
-| `schedule.briefing_time` | Time for briefings (e.g., `"07:00"`) |
-| `data.primary_source` | Price data source (`yfinance`) |
-
-**Getting your Telegram Chat ID:**
-1. Create a bot via [@BotFather](https://t.me/BotFather) and copy the token
-2. Send `/start` to your new bot
-3. Visit `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-4. Find your `chat.id` in the response
-
-### portfolio.json
-
-The portfolio file supports multiple broker accounts, each with a list of positions:
-
-```json
-{
-  "accounts": {
-    "my_broker": {
-      "positions": [
-        {
-          "name": "Apple",
-          "isin": "US0378331005",
-          "ticker": "AAPL",
-          "shares": 10.0,
-          "buy_in": 178.50,
-          "currency": "USD"
-        }
-      ]
-    }
-  },
-  "bank_accounts": {
-    "savings": {
-      "bank": "My Bank",
-      "value": 10000.00,
-      "interest": 2.5,
-      "note": "Emergency fund",
-      "is_depot_cash": false
-    }
-  },
-  "user_profile": {
-    "age": 25,
-    "country": "DE",
-    "tax_regime": "Abgeltungssteuer 26.375%",
-    "risk_tolerance": "moderate",
-    "goal": "growth",
-    "time_horizon": "long_term"
-  }
-}
-```
-
-The `user_profile` section shapes Claude's advice -- risk tolerance, tax regime, and time horizon all influence recommendations.
-
-### watchlist.json
-
-```json
-{
-  "watchlist": [
-    {"ticker": "RKLB", "name": "Rocket Lab"}
-  ],
-  "last_updated": "2026-01-01"
-}
-```
-
-Watchlist tickers are included in data collection but not in portfolio P&L calculations.
-
-## Telegram Bot Commands
-
-| Command / Input | Action |
-|----------------|--------|
-| `/status` | Show current portfolio overview |
-| `/briefing` | Trigger an on-demand briefing |
-| `/help` | Show help message |
-| `AAPL` | Analyze a ticker (any 1-5 letter uppercase word) |
-| `watch RKLB` | Add ticker to watchlist |
-| `unwatch RKLB` | Remove ticker from watchlist |
-| `Bought 10 AAPL @ 180` | Record a buy (asks for confirmation) |
-| `Sold 5 TSLA @ 250` | Record a sell (asks for confirmation) |
-| *Any other text* | Free-form chat with your AI advisor |
-
-Trade messages are parsed flexibly -- `"Hab 10 AAPL bei 180 gekauft"` works just as well as `"Bought 10 AAPL @ 180"`.
+The setup wizard guides you through language selection, country & tax regime, Telegram setup, API keys, briefing schedule, and portfolio import (CSV or manual).
 
 ## Running Modes
 
 ```bash
-# Bi-weekly briefing (meant for cron)
-python -m src.main briefing
-
-# Monthly report (meant for cron, 1st of each month)
-python -m src.main monthly
-
-# On-demand ticker analysis
-python -m src.main analyze --ticker AAPL
-
-# Interactive Telegram bot (long-running)
-python -m src.main bot
+python -m src.main briefing              # Bi-weekly briefing (for cron)
+python -m src.main monthly               # Monthly report (for cron)
+python -m src.main analyze --ticker AAPL  # On-demand analysis
+python -m src.main bot                    # Telegram bot (long-running)
+python -m src.main web                    # Web dashboard (long-running)
+python -m src.main web --port 3000       # Custom port
 ```
+
+## Web Dashboard
+
+The dashboard is built with FastAPI + Jinja2 + HTMX + Chart.js — no Node.js build step required. It reads from the same data cache that briefings write to, so you always see up-to-date information.
+
+| Page | Features |
+|------|----------|
+| **Dashboard** | KPI cards, allocation donut, TradingView chart, holdings table |
+| **Portfolio** | Per-account breakdown, currency/sector charts, trade logging |
+| **Analysis** | Benchmarks, monthly heatmap, tax-loss harvesting, top/bottom performers |
+| **Market** | Indices, US/EU macro, Fear & Greed, earnings calendar |
+| **Briefings** | AI briefing history, market regime, key insights, investment theses |
+| **Recommendations** | BUY/SELL/WATCH tracker with close/cancel, hit-rate stats |
+| **Settings** | API keys, language (de/en), schedule, portfolio overview |
+
+The "Refresh" button triggers a background data collection. On first start, data is collected automatically.
+
+## Telegram Bot Commands
+
+| Input | Action |
+|-------|--------|
+| `/status` | Portfolio overview |
+| `/briefing` | Trigger on-demand briefing |
+| `/log` | Step-by-step trade form |
+| `/help` | Help message |
+| `AAPL` | Analyze a ticker |
+| `watch RKLB` | Add to watchlist |
+| `unwatch RKLB` | Remove from watchlist |
+| `Bought 10 AAPL @ 180` | Log a buy |
+| `Sold 5 TSLA @ 250` | Log a sell |
+| *Any text* | Chat with your AI advisor |
+
+Trades logged via Telegram or the web dashboard automatically close matching open recommendations.
+
+## Configuration
+
+All settings can be configured via the **Settings page** on the web dashboard, or by editing `config/settings.json` directly:
+
+| Key | Description |
+|-----|-------------|
+| `telegram.bot_token` | Bot token from @BotFather |
+| `telegram.chat_id` | Your Telegram chat ID |
+| `brave_search.api_key` | Brave Search API key |
+| `fred.api_key` | FRED API key |
+| `finnhub.api_key` | Finnhub API key |
+| `schedule.briefing_days` | e.g. `["monday", "thursday"]` |
+| `schedule.briefing_time` | e.g. `"07:00"` |
+| `user.language` | `"de"` or `"en"` |
+| `web.port` | Dashboard port (default: 8080) |
 
 ## Deployment (Raspberry Pi / RockPi / Any Linux Server)
 
-The system is designed to run on a low-power always-on device.
-
-### Automated Setup
+Designed to run on a low-power always-on device (~90MB RAM total).
 
 ```bash
-# On your local machine: deploy to your server
+# From your local machine
 cd scripts
-./deploy.sh
-```
+./deploy.sh admin@192.168.1.27
 
-The deploy script copies files via SCP and runs `setup_rockpi.sh` on the remote, which:
-- Installs Python, Node.js, and Claude Code CLI
-- Creates a virtual environment and installs dependencies
-- Sets up cron jobs for scheduled briefings
-- Creates a systemd service for the Telegram bot
-
-### Manual Setup
-
-```bash
 # On the server
-sudo apt update && sudo apt install -y python3-pip python3-venv nodejs npm
-npm install -g @anthropic-ai/claude-code
-claude auth   # Authenticate with your Anthropic account
-
-cd /home/your_user/claudefolio
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+cd ~/claudefolio
+bash scripts/setup_rockpi.sh
 ```
 
-### Cron Jobs
+This sets up:
+- Python venv + dependencies
+- Cron jobs for scheduled briefings
+- systemd services for Telegram bot + web dashboard (auto-start on boot)
 
-```cron
-# Briefing on Monday and Thursday at 07:00
-0 7 * * 1,4 cd /home/your_user/claudefolio && ./venv/bin/python -m src.main briefing >> logs/briefing.log 2>&1
-
-# Monthly report on the 1st at 09:00
-0 9 1 * * cd /home/your_user/claudefolio && ./venv/bin/python -m src.main monthly >> logs/monthly.log 2>&1
-```
-
-### Telegram Bot as systemd Service
-
-```ini
-[Unit]
-Description=claudefolio Telegram Bot
-After=network.target
-
-[Service]
-Type=simple
-User=your_user
-WorkingDirectory=/home/your_user/claudefolio
-ExecStart=/home/your_user/claudefolio/venv/bin/python -m src.main bot
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-```
+### systemd Services
 
 ```bash
-sudo systemctl enable claude-money-bot
-sudo systemctl start claude-money-bot
+sudo systemctl status claudefolio-bot   # Telegram bot
+sudo systemctl status claudefolio-web   # Web dashboard
 ```
 
-## Memory System
-
-claudefolio maintains a persistent memory to avoid repetition and track recommendation outcomes:
-
-- **Briefing History** -- Last 20 briefing summaries, so Claude knows what was already discussed
-- **Recommendations** -- Open recommendations are tracked with entry price, target, and stop-loss. Outcomes (target hit / stop triggered) are updated automatically based on market data
-- **Position Theses** -- Claude's investment thesis for each position, updated when the situation changes
-- **Market Regime** -- Current market assessment (e.g., "Extreme Fear with technical bounce")
-- **Key Insights** -- Accumulated insights that persist across sessions
+Both services restart automatically on crash and start on boot.
 
 ## API Rate Limits & Costs
 
-- **yfinance** -- Free, no API key needed. May rate-limit on heavy use
-- **Brave Search** -- Free tier: 2,000 queries/month (sufficient for 2 briefings/week)
-- **FRED** -- Free, generous limits
-- **ECB Data API** -- Free, no key needed
-- **Claude Code CLI** -- Included in your Claude Max ($100/mo) or Pro ($20/mo) subscription
+| Service | Cost | Notes |
+|---------|------|-------|
+| Claude Code CLI | Included in Max ($100/mo) or Pro ($20/mo) | No separate API costs |
+| yfinance | Free | No API key needed |
+| Brave Search | Free tier: 2,000/month | Sufficient for 2 briefings/week |
+| FRED | Free | Generous limits |
+| Finnhub | Free tier: 60 calls/min | Sentiment + news |
+| ECB Data API | Free | No key needed |
 
 ## Disclaimer
 
-This software is for **educational and informational purposes only**. It does not constitute financial advice, investment advice, trading advice, or any other kind of advice.
+This software is for **educational and informational purposes only**. It does not constitute financial advice.
 
-- The AI-generated analysis may contain errors, hallucinations, or outdated information
-- Past performance of recommendations does not guarantee future results
+- AI-generated analysis may contain errors or hallucinations
+- Past recommendation performance does not guarantee future results
 - Always do your own research before making investment decisions
-- The authors accept no liability for any financial losses incurred through use of this software
+- The authors accept no liability for financial losses
 
 ## License
 

@@ -48,7 +48,12 @@ from src.analysis.performance import (
     track_recommendation_performance,
 )
 from src.delivery.telegram import send_briefing, send_document, send_error_alert, create_bot_app
-from src.delivery.pdf_report import generate_pdf
+
+try:
+    from src.delivery.pdf_report import generate_pdf
+    HAS_PDF = True
+except ImportError:
+    HAS_PDF = False
 
 logging.basicConfig(
     level=logging.INFO,
@@ -215,18 +220,21 @@ INDIZES:
 
         briefing_text = strip_json_block(result["text"])
 
-        # PDF generieren
-        logger.info("Generiere PDF-Report...")
-        pdf_path = generate_pdf(briefing_text)
-
         if tg.get("bot_token") and tg.get("chat_id"):
-            # PDF als Dokument senden
-            await send_document(
-                tg["bot_token"], tg["chat_id"],
-                str(pdf_path),
-                caption=f"\U0001f4ca Monatsbericht {datetime.now().strftime('%B %Y')}",
-            )
-            # Kurzfassung als Text-Nachricht
+            # PDF generieren und senden (wenn verfügbar)
+            if HAS_PDF:
+                try:
+                    logger.info("Generiere PDF-Report...")
+                    pdf_path = generate_pdf(briefing_text)
+                    await send_document(
+                        tg["bot_token"], tg["chat_id"],
+                        str(pdf_path),
+                        caption=f"\U0001f4ca Monatsbericht {datetime.now().strftime('%B %Y')}",
+                    )
+                except Exception as e:
+                    logger.warning(f"PDF-Generierung fehlgeschlagen: {e}")
+
+            # Text-Nachricht immer senden
             await send_briefing(tg["bot_token"], tg["chat_id"], f"\U0001f4ca <b>MONATSREPORT</b>\n\n{briefing_text}")
         else:
             print(briefing_text)

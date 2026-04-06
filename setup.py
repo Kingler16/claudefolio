@@ -165,6 +165,11 @@ def setup_apis() -> dict:
     else:
         apis["fred"] = ""
 
+    if ask_yn("Do you have a Finnhub API key? (for sentiment & news, free at finnhub.io)", False):
+        apis["finnhub"] = ask("Finnhub API Key")
+    else:
+        apis["finnhub"] = ""
+
     return apis
 
 
@@ -472,6 +477,7 @@ def save_settings(telegram: dict, apis: dict, schedule: dict, country: dict, lan
         "telegram": telegram,
         "brave_search": {"api_key": apis.get("brave", "")},
         "fred": {"api_key": apis.get("fred", "")},
+        "finnhub": {"api_key": apis.get("finnhub", "")},
         "schedule": schedule,
         "claude": {
             "command": "claude",
@@ -488,6 +494,10 @@ def save_settings(telegram: dict, apis: dict, schedule: dict, country: dict, lan
             "country": country["code"],
             "tax_regime": country["tax"],
             "tax_rate": country["tax_rate"],
+        },
+        "web": {
+            "host": "0.0.0.0",
+            "port": 8080,
         },
     }
 
@@ -509,6 +519,8 @@ def show_summary(telegram: dict, apis: dict, schedule: dict, country: dict, lang
     print("  2. Make sure Claude Code CLI is authenticated: \033[1mclaude --print 'test'\033[0m")
     print("  3. Test a briefing: \033[1m./venv/bin/python -m src.main briefing\033[0m")
     print("  4. Start the Telegram bot: \033[1m./venv/bin/python -m src.main bot\033[0m")
+    print("  5. Start the Web Dashboard: \033[1m./venv/bin/python -m src.main web\033[0m")
+    print(f"     → Open \033[1mhttp://localhost:8080\033[0m in your browser")
     print()
     print("  \033[90mFull documentation: README.md\033[0m")
     print()
@@ -529,6 +541,7 @@ def main():
 
     # Create dirs
     (Path(__file__).parent / "memory").mkdir(exist_ok=True)
+    (Path(__file__).parent / "memory" / "cache").mkdir(exist_ok=True)
     (Path(__file__).parent / "logs").mkdir(exist_ok=True)
 
     save_settings(telegram, apis, schedule, country, lang)

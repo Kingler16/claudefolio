@@ -56,9 +56,33 @@ sudo systemctl daemon-reload
 sudo systemctl enable claudefolio-bot
 sudo systemctl start claudefolio-bot
 
+# 7. Web Dashboard als systemd Service
+echo "Creating web dashboard service..."
+sudo tee /etc/systemd/system/claudefolio-web.service > /dev/null << SERVICE
+[Unit]
+Description=claudefolio Web Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$INSTALL_DIR
+ExecStart=$INSTALL_DIR/venv/bin/python -m src.main web
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+sudo systemctl daemon-reload
+sudo systemctl enable claudefolio-web
+sudo systemctl start claudefolio-web
+
 echo "=== Setup complete ==="
 echo ""
 echo "Next steps:"
 echo "1. Run 'python3 setup.py' to configure"
 echo "2. Authenticate Claude: BROWSER='' claude --print 'test'"
 echo "3. Test: ./venv/bin/python -m src.main briefing"
+echo "4. Dashboard: http://$(hostname -I | awk '{print $1}'):8080"

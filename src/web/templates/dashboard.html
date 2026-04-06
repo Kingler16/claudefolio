@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — claudefolio{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.min.js"></script>
+<script src="/static/vendor/lightweight-charts.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard</h1>
+        <div class="page-subtitle" id="cache-status-header"
+             hx-get="/api/partial/cache-status" hx-trigger="load, every 60s" hx-swap="innerHTML">
+        </div>
+    </div>
+    <button class="btn btn-accent" id="refresh-btn" onclick="triggerRefresh()">
+        <span class="spinner"></span>
+        Aktualisieren
+    </button>
+</div>
+
+<!-- Index Ticker Bar -->
+<div id="index-bar" hx-get="/api/partial/indices" hx-trigger="every 60s" hx-swap="innerHTML">
+    {% if indices %}
+    <div class="index-bar">
+        {% for idx in indices %}
+        <div class="index-item">
+            <span class="index-name">{{ idx.name }}</span>
+            <span class="index-value">{{ idx.value|number }}</span>
+            {% if idx.change_pct is not none %}
+            <span class="index-change {{ 'positive' if idx.change_pct >= 0 else 'negative' }}">
+                {{ idx.change_pct|pct }}
+            </span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="index-bar" style="color: var(--text-muted); font-size: 12px;">
+        Keine Index-Daten — klicke auf Aktualisieren
+    </div>
+    {% endif %}
+</div>
+
+<!-- KPI Cards (5 statt 6, wichtigste zuerst) -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Gesamtvermögen</div>
+        <div class="kpi-value">{{ overview.total_value_eur|eur }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Wertpapiere</div>
+        <div class="kpi-value">{{ overview.holdings_value_eur|eur }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Liquide Mittel</div>
+        <div class="kpi-value">{{ overview.cash_total|eur }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Gewinn / Verlust</div>
+        <div class="kpi-value {{ 'positive' if overview.total_pnl_eur >= 0 else 'negative' }}">
+            {{ overview.total_pnl_eur|eur }}
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Rendite</div>
+        <div class="kpi-value {{ 'positive' if overview.total_pnl_pct >= 0 else 'negative' }}">
+            {{ overview.total_pnl_pct|pct }}
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-grid">
+    <div class="card">
+        <div class="card-title">Portfolio-Zusammensetzung</div>
+        <div class="chart-container" style="position: relative; height: 320px;">
+            <canvas id="allocationChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Vermögensentwicklung</div>
+        <div class="chart-container" style="height: 320px;">
+            {% if snapshots %}
+            <div id="tvChart" style="width: 100%; height: 100%;"></div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-text">Noch keine historischen Daten</div>
+                <div class="empty-state-hint">Erscheint nach dem ersten Monatsreport</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Holdings Table -->
+<div class="card">
+    <div class="card-title">Positionen ({{ overview.position_count }})</div>
+    <div class="table-wrapper">
+        <table id="holdingsTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name</th>
+                    <th onclick="sortTable(1)">Ticker</th>
+                    <th onclick="sortTable(2)">Konto</th>
+                    <th class="text-right" onclick="sortTable(3, true)">Stück</th>
+                    <th class="text-right" onclick="sortTable(4, true)">Kurs</th>
+                    <th class="text-right" onclick="sortTable(5, true)">Wert</th>
+                    <th class="text-right" onclick="sortTable(6, true)">P&L</th>
+                    <th class="text-right" onclick="sortTable(7, true)">P&L %</th>
+                    <th class="text-right" onclick="sortTable(8, true)">Anteil</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pos in overview.positions %}
+                <tr>
+                    <td>{{ pos.name }}</td>
+                    <td><span class="ticker-badge">{{ pos.ticker or '–' }}</span></td>
+                    <td class="text-muted">{{ overview.accounts_grouped[pos.account].display_name if pos.account in overview.accounts_grouped else pos.account }}</td>
+                    <td class="text-right">{{ pos.shares|number }}</td>
+                    <td class="text-right">
+                        {{ pos.current_price_eur|eur }}
+                        {% if not pos.has_live_price %}<span class="text-yellow" style="font-size:10px;">&#9888;</span>{% endif %}
+                    </td>
+                    <td class="text-right" style="font-weight: 600;">{{ pos.current_value_eur|eur }}</td>
+                    <td class="text-right {{ 'positive' if pos.pnl_eur >= 0 else 'negative' }}">{{ pos.pnl_eur|eur }}</td>
+                    <td class="text-right {{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}">{{ pos.pnl_pct|pct }}</td>
+                    <td class="text-right text-muted">{{ pos.allocation_pct }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const positions = {{ overview.positions|tojson }};
+const holdingsValueEur = {{ overview.holdings_value_eur }};
+const snapshots = {{ snapshots|tojson }};
+
+function formatEur(val) {
+    if (val == null) return '–';
+    return val.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '€';
+}
+
+// ─── Table sorting ───
+let currentSortCol = -1, sortAsc = false;
+function sortTable(colIdx, numeric) {
+    const table = document.getElementById('holdingsTable');
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    if (currentSortCol === colIdx) { sortAsc = !sortAsc; } else { currentSortCol = colIdx; sortAsc = !numeric; }
+    rows.sort((a, b) => {
+        let va = a.cells[colIdx].textContent.trim().replace(/[€%▲▼+.]/g, '').replace(',', '.');
+        let vb = b.cells[colIdx].textContent.trim().replace(/[€%▲▼+.]/g, '').replace(',', '.');
+        if (numeric) { va = parseFloat(va) || 0; vb = parseFloat(vb) || 0; }
+        else { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+        return sortAsc ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+// ─── Donut Chart (Top 8 + Sonstige, Namen statt ISINs) ───
+const allocationCtx = document.getElementById('allocationChart');
+if (allocationCtx && positions.length > 0) {
+    const sorted = [...positions].sort((a, b) => b.current_value_eur - a.current_value_eur);
+    const top = sorted.slice(0, 8);
+    const rest = sorted.slice(8);
+    const restValue = rest.reduce((sum, p) => sum + p.current_value_eur, 0);
+
+    const labels = top.map(p => {
+        // Name bevorzugen wenn Ticker eine ISIN ist oder zu lang
+        if (p.ticker && p.ticker.length <= 6 && !p.ticker.startsWith('AT0')) return p.ticker;
+        return p.name.length > 22 ? p.name.substring(0, 20) + '…' : p.name;
+    });
+    const values = top.map(p => p.current_value_eur);
+    if (restValue > 0) {
+        labels.push('Sonstige (' + rest.length + ')');
+        values.push(restValue);
+    }
+
+    const colors = ['#3b82f6','#4ade80','#f87171','#facc15','#8b5cf6','#ec4899','#06b6d4','#f97316','#64748b'];
+
+    new Chart(allocationCtx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderColor: '#0f172a', borderWidth: 2 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#94a3b8', font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const val = ctx.parsed;
+                            const pct = (val / holdingsValueEur * 100).toFixed(1);
+                            return ' ' + formatEur(val) + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                const { ctx } = chart;
+                const cx = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                const cy = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 16px -apple-system, sans-serif';
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fillText(formatEur(holdingsValueEur), cx, cy - 6);
+                ctx.font = '10px -apple-system, sans-serif';
+                ctx.fillStyle = '#64748b';
+                ctx.fillText('Wertpapiere', cx, cy + 12);
+                ctx.restore();
+            }
+        }]
+    });
+}
+
+// ─── TradingView Chart ───
+const tvContainer = document.getElementById('tvChart');
+if (tvContainer && snapshots.length > 0 && typeof LightweightCharts !== 'undefined') {
+    const chart = LightweightCharts.createChart(tvContainer, {
+        layout: { background: { color: '#1e293b' }, textColor: '#94a3b8', fontFamily: '-apple-system, sans-serif' },
+        grid: { vertLines: { color: 'rgba(51,65,85,0.3)' }, horzLines: { color: 'rgba(51,65,85,0.3)' } },
+        rightPriceScale: { borderColor: '#334155' },
+        timeScale: { borderColor: '#334155', timeVisible: false },
+        crosshair: { horzLine: { color: '#3b82f6', labelBackgroundColor: '#3b82f6' }, vertLine: { color: '#3b82f6', labelBackgroundColor: '#3b82f6' } },
+    });
+    const series = chart.addAreaSeries({
+        lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.4)', bottomColor: 'rgba(59,130,246,0.0)',
+        lineWidth: 2, priceFormat: { type: 'custom', formatter: p => formatEur(p) },
+    });
+    const data = snapshots.map(s => ({ time: s.date || s.month || '', value: s.total_value || s.portfolio_value || 0 })).filter(d => d.time && d.value > 0);
+    series.setData(data);
+    chart.timeScale().fitContent();
+    new ResizeObserver(() => { chart.applyOptions({ width: tvContainer.clientWidth, height: tvContainer.clientHeight }); }).observe(tvContainer);
+}
+
+// ─── Refresh ───
+function triggerRefresh() {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('loading'); btn.disabled = true;
+    fetch('/api/refresh', { method: 'POST' }).then(r => r.json()).then(data => {
+        if (data.status === 'already_running') { btn.classList.remove('loading'); btn.disabled = false; return; }
+        const poll = setInterval(() => {
+            fetch('/api/refresh/status').then(r => r.json()).then(s => { if (!s.running) { clearInterval(poll); location.reload(); } });
+        }, 3000);
+    }).catch(() => { btn.classList.remove('loading'); btn.disabled = false; });
+}
+
+// ─── ESC schließt Modals ───
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+    }
+});
+</script>
+{% endblock %}

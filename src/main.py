@@ -52,12 +52,13 @@ from src.analysis.performance import (
     find_tax_loss_harvesting,
     track_recommendation_performance,
 )
+from src.data.cache import save_cache
 from src.delivery.telegram import send_briefing, send_document, send_error_alert, create_bot_app
 
 try:
     from src.delivery.pdf_report import generate_pdf
     HAS_PDF = True
-except ImportError:
+except (ImportError, OSError):
     HAS_PDF = False
 
 logging.basicConfig(
@@ -104,6 +105,16 @@ async def run_briefing():
         macro_events = get_upcoming_macro_events(days_ahead=30)
         calendar_str = format_full_calendar(market_status, earnings, macro_events)
 
+        # 1b. Cache für Dashboard schreiben
+        save_cache("market_data", market_data)
+        save_cache("macro_data", macro_data)
+        save_cache("news_data", news)
+        save_cache("calendar_data", {
+            "earnings": earnings,
+            "market_status": market_status,
+            "macro_events": macro_events,
+        })
+
         # 2. Performance & Analytics
         logger.info("Berechne Performance-Metriken...")
         benchmark = calculate_benchmark_comparison(market_data)
@@ -144,6 +155,7 @@ async def run_briefing():
         result = ask_claude(build_system_prompt(load_settings(), load_portfolio()), full_prompt)
 
         # 5. Memory updaten
+        briefing_text = strip_json_block(result["text"])
         structured = result.get("structured")
         if structured:
             if structured.get("summary"):
@@ -151,6 +163,7 @@ async def run_briefing():
                     structured["summary"],
                     structured.get("recommendations", []),
                     structured.get("market_regime"),
+                    full_text=briefing_text,
                 )
             if structured.get("recommendations"):
                 save_recommendations(structured["recommendations"])
@@ -167,7 +180,6 @@ async def run_briefing():
                     add_position_thesis(ticker, thesis)
 
         # 6. Via Telegram senden
-        briefing_text = strip_json_block(result["text"])
         if tg.get("bot_token") and tg.get("chat_id"):
             logger.info("Sende via Telegram...")
             await send_briefing(tg["bot_token"], tg["chat_id"], briefing_text)
@@ -194,6 +206,10 @@ async def run_monthly_report():
         market_data = collect_all_market_data(portfolio)
         macro_data = collect_all_macro_data(settings.get("fred", {}).get("api_key", ""))
         memory = load_memory()
+
+        # Cache für Dashboard
+        save_cache("market_data", market_data)
+        save_cache("macro_data", macro_data)
 
         portfolio_summary = build_portfolio_summary(portfolio, market_data)
         benchmark = calculate_benchmark_comparison(market_data)
@@ -352,14 +368,27 @@ Antworte direkt, kurz und hilfreich auf Deutsch. Telegram-HTML-Format. Kein Gesc
     app.run_polling()
 
 
+def run_web(host: str = "0.0.0.0", port: int = 8080):
+    """Startet das Web-Dashboard."""
+    logger.info("=== WEB DASHBOARD START ===")
+    settings = load_settings()
+    web_cfg = settings.get("web", {})
+    host = web_cfg.get("host", host)
+    port = web_cfg.get("port", port)
+
+    from src.web.app import run_web_server
+    run_web_server(host=host, port=port)
+
+
 def main():
     parser = argparse.ArgumentParser(description="AI Vermögensberater")
     parser.add_argument(
         "mode",
-        choices=["briefing", "monthly", "analyze", "bot"],
-        help="Modus: briefing (2x/Woche), monthly (Monatsreport), analyze (Ticker), bot (Telegram Bot)",
+        choices=["briefing", "monthly", "analyze", "bot", "web"],
+        help="Modus: briefing (2x/Woche), monthly (Monatsreport), analyze (Ticker), bot (Telegram Bot), web (Dashboard)",
     )
     parser.add_argument("--ticker", "-t", help="Ticker für Analyse-Modus")
+    parser.add_argument("--port", "-p", type=int, default=8080, help="Port für Web-Modus")
 
     args = parser.parse_args()
 
@@ -373,6 +402,8 @@ def main():
         asyncio.run(run_ticker_analysis(args.ticker))
     elif args.mode == "bot":
         run_bot()
+    elif args.mode == "web":
+        run_web(port=args.port)
 
 
 if __name__ == "__main__":

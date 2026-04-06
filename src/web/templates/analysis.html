@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}Analyse — claudefolio{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Analyse</h1>
+        <div class="page-subtitle">Rendite, Aufteilung & Steueroptimierung</div>
+    </div>
+</div>
+
+<!-- Allocation Breakdown: 2-spaltig, größere Charts -->
+<div class="charts-grid" style="margin-bottom: 20px;">
+    <div class="card">
+        <div class="card-title">Nach Sektor</div>
+        <div style="height: 300px;"><canvas id="sectorPie"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="card-title">Nach Währung & Konto</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 300px;">
+            <div><canvas id="currencyPie"></canvas></div>
+            <div><canvas id="accountPie"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Benchmark Comparison -->
+{% if benchmarks %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Benchmark-Vergleich (Wochenperformance)</div>
+    <div style="height: 280px;">
+        <canvas id="benchmarkChart"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<!-- Monthly Returns Heatmap -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Monatsrenditen (Heatmap)</div>
+    {% if snapshots %}
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Jahr</th>
+                    <th>Jan</th><th>Feb</th><th>Mär</th><th>Apr</th><th>Mai</th><th>Jun</th>
+                    <th>Jul</th><th>Aug</th><th>Sep</th><th>Okt</th><th>Nov</th><th>Dez</th>
+                </tr>
+            </thead>
+            <tbody id="heatmapBody">
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#128202;</div>
+        <div class="empty-state-text">Noch keine Snapshots vorhanden</div>
+        <div class="empty-state-hint">Nach dem ersten Monatsreport erscheinen hier Daten</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Performance Chart -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Vermögensentwicklung</div>
+    <div style="height: 300px;">
+        {% if snapshots %}
+        <canvas id="perfChart"></canvas>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">&#128200;</div>
+            <div class="empty-state-text">Keine historischen Daten</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tax-Loss Harvesting -->
+{% if tax_loss %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Tax-Loss-Harvesting (KESt {{ (tax_loss.tax_rate * 100)|round(1) }}%)</div>
+
+    <!-- KPI Row -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Unreal. Gewinne</div>
+            <div class="positive" style="font-size: 18px; font-weight: 700;">{{ tax_loss.total_gains|eur }}</div>
+        </div>
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Unreal. Verluste</div>
+            <div class="negative" style="font-size: 18px; font-weight: 700;">{{ tax_loss.total_losses|eur }}</div>
+        </div>
+        <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Pot. KESt</div>
+            <div style="font-size: 18px; font-weight: 700;">{{ tax_loss.potential_tax|eur }}</div>
+        </div>
+        <div style="background: var(--green-bg); border-radius: 8px; padding: 12px;">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Steuerersparnis</div>
+            <div class="positive" style="font-size: 18px; font-weight: 700;">{{ tax_loss.tax_savings|eur }}</div>
+        </div>
+    </div>
+
+    <!-- Gains / Losses Tables -->
+    <div class="charts-grid">
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--red); margin-bottom: 8px; text-transform: uppercase;">
+                Verlust-Positionen (Harvesting-Kandidaten)
+            </div>
+            {% if tax_loss.losses %}
+            <table>
+                <thead><tr><th>Position</th><th class="text-right">P&L</th><th class="text-right">%</th></tr></thead>
+                <tbody>
+                    {% for pos in tax_loss.losses %}
+                    <tr>
+                        <td>
+                            {{ pos.name }}
+                            <span class="ticker-badge" style="margin-left: 4px;">{{ pos.ticker }}</span>
+                        </td>
+                        <td class="text-right negative" style="font-weight: 600;">{{ pos.pnl_eur|eur }}</td>
+                        <td class="text-right negative">{{ pos.pnl_pct|pct }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-muted" style="padding: 8px 0;">Keine Verlust-Positionen</div>
+            {% endif %}
+        </div>
+        <div>
+            <div style="font-size: 12px; font-weight: 600; color: var(--green); margin-bottom: 8px; text-transform: uppercase;">
+                Gewinn-Positionen
+            </div>
+            {% if tax_loss.gains %}
+            <table>
+                <thead><tr><th>Position</th><th class="text-right">P&L</th><th class="text-right">%</th></tr></thead>
+                <tbody>
+                    {% for pos in tax_loss.gains %}
+                    <tr>
+                        <td>
+                            {{ pos.name }}
+                            <span class="ticker-badge" style="margin-left: 4px;">{{ pos.ticker }}</span>
+                        </td>
+                        <td class="text-right positive" style="font-weight: 600;">{{ pos.pnl_eur|eur }}</td>
+                        <td class="text-right positive">{{ pos.pnl_pct|pct }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="text-muted" style="padding: 8px 0;">Keine Gewinn-Positionen</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Top & Bottom Performers -->
+<div class="charts-grid">
+    <div class="card">
+        <div class="card-title">Top Performer</div>
+        {% set sorted_pos = overview.positions|sort(attribute='pnl_pct', reverse=true) %}
+        {% for pos in sorted_pos[:5] %}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+            <div>
+                <span style="font-weight: 500;">{{ pos.name }}</span>
+                <span class="ticker-badge" style="margin-left: 6px;">{{ pos.ticker }}</span>
+            </div>
+            <span class="positive" style="font-weight: 600;">{{ pos.pnl_pct|pct }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="card">
+        <div class="card-title">Schlechteste Performer</div>
+        {% set sorted_neg = overview.positions|sort(attribute='pnl_pct') %}
+        {% for pos in sorted_neg[:5] %}
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+            <div>
+                <span style="font-weight: 500;">{{ pos.name }}</span>
+                <span class="ticker-badge" style="margin-left: 6px;">{{ pos.ticker }}</span>
+            </div>
+            <span class="negative" style="font-weight: 600;">{{ pos.pnl_pct|pct }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const sectorBreakdown = {{ overview.sector_breakdown|tojson }};
+const currencyExposure = {{ overview.currency_exposure|tojson }};
+const accountBreakdown = {{ overview.account_breakdown|tojson }};
+const snapshots = {{ snapshots|tojson }};
+const benchmarks = {{ benchmarks|tojson }};
+
+const pieColors = ['#3b82f6','#22c55e','#ef4444','#eab308','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#a855f7','#64748b'];
+const pieOpts = {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 }, padding: 4 } } }
+};
+
+function makePie(id, labels, data) {
+    new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: pieColors.slice(0, labels.length), borderColor: '#0f172a', borderWidth: 2 }] },
+        options: pieOpts
+    });
+}
+
+makePie('sectorPie', Object.keys(sectorBreakdown), Object.values(sectorBreakdown));
+makePie('currencyPie', Object.keys(currencyExposure), Object.values(currencyExposure));
+makePie('accountPie', Object.keys(accountBreakdown), Object.values(accountBreakdown));
+
+// Benchmark Bar Chart — eigene Farbe pro Index
+const benchCtx = document.getElementById('benchmarkChart');
+if (benchCtx && benchmarks.length > 0) {
+    const bmLabels = benchmarks.map(b => b.name);
+    const bmValues = benchmarks.map(b => b.change_pct);
+    const indexColors = {
+        'S&P 500': '#3b82f6', 'NASDAQ': '#8b5cf6', 'DAX': '#facc15',
+        'ATX': '#ef4444', 'Euro Stoxx 50': '#06b6d4', 'Gold': '#f59e0b', 'BTC/USD': '#f97316'
+    };
+    const bmColors = benchmarks.map(b => indexColors[b.name] || '#64748b');
+
+    new Chart(benchCtx, {
+        type: 'bar',
+        data: {
+            labels: bmLabels,
+            datasets: [{
+                label: 'Wochenperformance %',
+                data: bmValues,
+                backgroundColor: bmColors,
+                borderRadius: 6,
+                barThickness: 36,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    ticks: { color: '#64748b', callback: v => v + '%' },
+                    grid: { color: 'rgba(51,65,85,0.3)' },
+                },
+                y: {
+                    ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } },
+                    grid: { display: false },
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => (ctx.parsed.x >= 0 ? '+' : '') + ctx.parsed.x.toFixed(2) + '%'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Heatmap
+if (snapshots.length > 0) {
+    const byYear = {};
+    snapshots.forEach(s => {
+        const d = s.date || s.month || '';
+        const parts = d.split('-');
+        if (parts.length >= 2) {
+            const year = parts[0];
+            const month = parseInt(parts[1]) - 1;
+            if (!byYear[year]) byYear[year] = new Array(12).fill(null);
+            byYear[year][month] = s.monthly_return_pct || s.return_pct || null;
+        }
+    });
+
+    const tbody = document.getElementById('heatmapBody');
+    if (tbody) {
+        Object.keys(byYear).sort().forEach(year => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td style="font-weight:600;">${year}</td>`;
+            byYear[year].forEach(val => {
+                const td = document.createElement('td');
+                td.className = 'text-right';
+                if (val !== null) {
+                    const intensity = Math.min(Math.abs(val) / 5, 1);
+                    const color = val >= 0
+                        ? `rgba(34, 197, 94, ${0.1 + intensity * 0.6})`
+                        : `rgba(239, 68, 68, ${0.1 + intensity * 0.6})`;
+                    td.style.background = color;
+                    td.style.borderRadius = '4px';
+                    td.style.fontWeight = '600';
+                    td.style.fontSize = '12px';
+                    td.style.color = val >= 0 ? '#22c55e' : '#ef4444';
+                    td.textContent = (val >= 0 ? '+' : '') + val.toFixed(1) + '%';
+                } else {
+                    td.textContent = '–';
+                    td.style.color = '#64748b';
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+// Performance Chart
+const perfCtx = document.getElementById('perfChart');
+if (perfCtx && snapshots.length > 0) {
+    new Chart(perfCtx, {
+        type: 'line',
+        data: {
+            labels: snapshots.map(s => s.date || s.month || ''),
+            datasets: [{
+                label: 'Vermögen (EUR)',
+                data: snapshots.map(s => s.total_value || s.portfolio_value || 0),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.1)',
+                fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(51,65,85,0.3)' } },
+                y: { ticks: { color: '#64748b', callback: v => v.toLocaleString('de-DE') + '€' }, grid: { color: 'rgba(51,65,85,0.3)' } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+</script>
+{% endblock %}

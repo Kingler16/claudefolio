@@ -12,47 +12,60 @@ logger = logging.getLogger(__name__)
 MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
 
 
-def calculate_benchmark_comparison(market_data: dict) -> str:
-    """Vergleicht Portfolio-Performance mit Benchmarks."""
+def compute_benchmark_data(market_data: dict) -> list:
+    """Berechnet Benchmark-Daten als strukturierte Liste."""
     indices = market_data.get("indices", {})
-    benchmarks = {}
+    benchmarks = []
 
     for name in ["S&P 500", "NASDAQ", "DAX", "ATX", "Euro Stoxx 50", "Gold", "BTC/USD"]:
         if name in indices:
             change = indices[name].get("change_pct", 0)
-            benchmarks[name] = change
+            benchmarks.append({"name": name, "change_pct": change})
+
+    benchmarks.sort(key=lambda x: x["change_pct"], reverse=True)
+    return benchmarks
+
+
+def calculate_benchmark_comparison(market_data: dict) -> str:
+    """Vergleicht Portfolio-Performance mit Benchmarks."""
+    benchmarks = compute_benchmark_data(market_data)
 
     if not benchmarks:
         return "Keine Benchmark-Daten verfügbar."
 
     lines = ["BENCHMARK-VERGLEICH (Wochenperformance):"]
-    for name, change in sorted(benchmarks.items(), key=lambda x: x[1], reverse=True):
+    for b in benchmarks:
+        change = b["change_pct"]
         bar = "+" * int(abs(change)) if change > 0 else "-" * int(abs(change))
-        lines.append(f"  {name:20s}: {change:+.2f}% {bar}")
+        lines.append(f"  {b['name']:20s}: {change:+.2f}% {bar}")
 
     return "\n".join(lines)
 
 
-def find_tax_loss_harvesting(portfolio: dict, market_data: dict, tax_rate: float = None) -> str:
-    """Identifiziert Tax-Loss-Harvesting Opportunitäten."""
+def _load_tax_rate() -> float:
+    """Lädt Steuersatz aus Settings."""
+    try:
+        settings_path = Path(__file__).parent.parent.parent / "config" / "settings.json"
+        with open(settings_path) as f:
+            settings = json.load(f)
+        return settings.get("user", {}).get("tax_rate", 0.275)
+    except Exception:
+        return 0.275
+
+
+def compute_tax_loss_data(portfolio: dict, market_data: dict, tax_rate: float = None) -> dict:
+    """Berechnet Tax-Loss-Harvesting Daten als strukturiertes Dict."""
     if tax_rate is None:
-        # Versuche aus Settings zu laden
-        try:
-            settings_path = Path(__file__).parent.parent.parent / "config" / "settings.json"
-            import json
-            with open(settings_path) as f:
-                settings = json.load(f)
-            tax_rate = settings.get("user", {}).get("tax_rate", 0.275)
-        except Exception:
-            tax_rate = 0.275
+        tax_rate = _load_tax_rate()
+
     gains = []
     losses = []
 
     indices = market_data.get("indices", {})
     eur_usd = indices.get("EUR/USD", {}).get("value", 1.0)
 
-    for account_name, account in portfolio["accounts"].items():
-        for pos in account["positions"]:
+    for account_name, account in portfolio.get("accounts", {}).items():
+        for pos in account.get("positions", []):
             ticker = pos.get("ticker")
             if not ticker or ticker not in market_data.get("positions", {}):
                 continue
@@ -65,7 +78,6 @@ def find_tax_loss_harvesting(portfolio: dict, market_data: dict, tax_rate: float
             if not current_price:
                 continue
 
-            # Alles in EUR
             if currency == "USD":
                 buy_in_eur = buy_in / eur_usd
                 current_eur = current_price / eur_usd
@@ -93,66 +105,106 @@ def find_tax_loss_harvesting(portfolio: dict, market_data: dict, tax_rate: float
     total_losses = sum(l["pnl_eur"] for l in losses)
     potential_tax = total_gains * tax_rate
     net_after_harvesting = (total_gains + total_losses) * tax_rate
+    tax_savings = potential_tax - max(0, net_after_harvesting)
+
+    return {
+        "tax_rate": tax_rate,
+        "total_gains": round(total_gains, 2),
+        "total_losses": round(total_losses, 2),
+        "potential_tax": round(potential_tax, 2),
+        "net_tax": round(max(0, net_after_harvesting), 2),
+        "tax_savings": round(tax_savings, 2),
+        "gains": sorted(gains, key=lambda x: x["pnl_eur"], reverse=True),
+        "losses": sorted(losses, key=lambda x: x["pnl_eur"]),
+    }
+
+
+def find_tax_loss_harvesting(portfolio: dict, market_data: dict, tax_rate: float = None) -> str:
+    """Identifiziert Tax-Loss-Harvesting Opportunitäten (String-Format für Prompts)."""
+    data = compute_tax_loss_data(portfolio, market_data, tax_rate)
 
     lines = [
         "TAX-LOSS-HARVESTING ANALYSE (KESt 27.5%):",
-        f"  Unrealisierte Gewinne: {total_gains:+.2f}€",
-        f"  Unrealisierte Verluste: {total_losses:+.2f}€",
-        f"  Potenzielle KESt auf Gewinne: {potential_tax:.2f}€",
-        f"  KESt nach Verlustverrechnung: {max(0, net_after_harvesting):.2f}€",
-        f"  Mögliche Steuerersparnis: {potential_tax - max(0, net_after_harvesting):.2f}€",
+        f"  Unrealisierte Gewinne: {data['total_gains']:+.2f}€",
+        f"  Unrealisierte Verluste: {data['total_losses']:+.2f}€",
+        f"  Potenzielle KESt auf Gewinne: {data['potential_tax']:.2f}€",
+        f"  KESt nach Verlustverrechnung: {data['net_tax']:.2f}€",
+        f"  Mögliche Steuerersparnis: {data['tax_savings']:.2f}€",
         "",
         "  Verlust-Positionen (Kandidaten für Harvesting):",
     ]
-    for l in sorted(losses, key=lambda x: x["pnl_eur"]):
+    for l in data["losses"]:
         lines.append(f"    {l['name']} ({l['ticker']}): {l['pnl_eur']:+.2f}€ ({l['pnl_pct']:+.1f}%) [{l['account']}]")
 
     lines.append("")
     lines.append("  Gewinn-Positionen:")
-    for g in sorted(gains, key=lambda x: x["pnl_eur"], reverse=True):
+    for g in data["gains"]:
         lines.append(f"    {g['name']} ({g['ticker']}): {g['pnl_eur']:+.2f}€ ({g['pnl_pct']:+.1f}%) [{g['account']}]")
 
     return "\n".join(lines)
 
 
-def track_recommendation_performance(market_data: dict) -> str:
-    """Trackt wie vergangene Empfehlungen performt haben."""
+def compute_recommendation_data(market_data: dict) -> dict:
+    """Berechnet Empfehlungs-Performance als strukturiertes Dict."""
     recs_path = MEMORY_DIR / "recommendations.json"
     if not recs_path.exists():
-        return "Noch keine Empfehlungen zum Tracken."
+        return {"open": [], "wins": [], "losses": [], "hit_rate": 0, "total_closed": 0}
 
     with open(recs_path) as f:
         recs = json.load(f)
 
     if not recs:
+        return {"open": [], "wins": [], "losses": [], "hit_rate": 0, "total_closed": 0}
+
+    open_recs = []
+    wins = []
+    losses = []
+
+    for rec in recs:
+        status = rec.get("status", "open")
+        if status == "open":
+            open_recs.append(rec)
+        elif status == "target_hit":
+            wins.append(rec)
+        elif status == "stop_hit":
+            losses.append(rec)
+
+    total_closed = len(wins) + len(losses)
+    hit_rate = (len(wins) / total_closed * 100) if total_closed > 0 else 0
+
+    return {
+        "open": open_recs,
+        "wins": wins,
+        "losses": losses,
+        "hit_rate": round(hit_rate, 0),
+        "total_closed": total_closed,
+        "open_count": len(open_recs),
+    }
+
+
+def track_recommendation_performance(market_data: dict) -> str:
+    """Trackt wie vergangene Empfehlungen performt haben (String-Format für Prompts)."""
+    data = compute_recommendation_data(market_data)
+
+    if not data["open"] and not data["wins"] and not data["losses"]:
         return "Noch keine Empfehlungen zum Tracken."
 
     lines = ["EMPFEHLUNGS-BILANZ:"]
-    wins = 0
-    losses = 0
-    open_count = 0
+    lines.append(f"  Abgeschlossen: {data['total_closed']} (Hit-Rate: {data['hit_rate']:.0f}%) | Offen: {data['open_count']}")
 
-    for rec in recs:
+    for rec in data["open"]:
         ticker = rec.get("ticker", "?")
         action = rec.get("action", "?")
-        status = rec.get("status", "open")
         date = rec.get("date", "?")[:10]
+        unrealized = rec.get("unrealized_pct")
+        if unrealized is not None:
+            emoji = "\U0001f4c8" if unrealized > 0 else "\U0001f4c9"
+            lines.append(f"  {emoji} OFFEN {date}: {action} {ticker} \u2192 {unrealized:+.1f}%")
 
-        if status == "open":
-            open_count += 1
-            unrealized = rec.get("unrealized_pct")
-            if unrealized is not None:
-                emoji = "📈" if unrealized > 0 else "📉"
-                lines.append(f"  {emoji} OFFEN {date}: {action} {ticker} → {unrealized:+.1f}%")
-        elif status == "target_hit":
-            wins += 1
-            lines.append(f"  ✅ {date}: {action} {ticker} → Ziel erreicht")
-        elif status == "stop_hit":
-            losses += 1
-            lines.append(f"  ❌ {date}: {action} {ticker} → Stop ausgelöst")
+    for rec in data["wins"]:
+        lines.append(f"  \u2705 {rec.get('date', '?')[:10]}: {rec.get('action', '?')} {rec.get('ticker', '?')} \u2192 Ziel erreicht")
 
-    total = wins + losses
-    hit_rate = (wins / total * 100) if total > 0 else 0
-    lines.insert(1, f"  Abgeschlossen: {total} (Hit-Rate: {hit_rate:.0f}%) | Offen: {open_count}")
+    for rec in data["losses"]:
+        lines.append(f"  \u274c {rec.get('date', '?')[:10]}: {rec.get('action', '?')} {rec.get('ticker', '?')} \u2192 Stop ausgelöst")
 
     return "\n".join(lines)

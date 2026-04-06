@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Markt — claudefolio{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Markt-Überblick</h1>
+        <div class="page-subtitle">Indizes, Makrodaten & Kalender</div>
+    </div>
+</div>
+
+<!-- Indices Grid -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Indizes</div>
+    {% if indices %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+        {% for idx in indices %}
+        <div style="background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">{{ idx.name }}</div>
+            {% if idx.description %}<div style="font-size: 10px; color: var(--text-muted); opacity: 0.6; margin-bottom: 2px;">{{ idx.description }}</div>{% endif %}
+            <div style="font-size: 20px; font-weight: 700;">
+                {% if idx.name == 'EUR/USD' %}
+                    {{ "%.4f"|format(idx.value) if idx.value else '–' }}
+                {% else %}
+                    {{ idx.value|number(0) if idx.value else '–' }}
+                {% endif %}
+            </div>
+            {% if idx.change_pct is not none %}
+            <div class="{{ 'positive' if idx.change_pct >= 0 else 'negative' }}" style="font-size: 13px; font-weight: 600; margin-top: 2px;">
+                {{ idx.change_pct|pct }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-text">Keine Index-Daten im Cache</div>
+        <div class="empty-state-hint">Starte ein Briefing oder klicke auf Aktualisieren</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Macro Data -->
+<div class="charts-grid" style="margin-bottom: 24px;">
+    <!-- US Macro -->
+    <div class="card">
+        <div class="card-title">US-Makrodaten</div>
+        {% if macro and macro.get('us') %}
+        <table>
+            <tbody>
+                {% set us = macro['us'] %}
+                {% for key, item in us.items() %}
+                <tr>
+                    <td style="font-size: 13px; color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
+                    <td class="text-right" style="font-weight: 600;">
+                        {% if item is mapping %}
+                            {{ item.get('value', '–') }}
+                        {% else %}
+                            {{ item }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><div class="empty-state-text">Keine Makrodaten im Cache</div></div>
+        {% endif %}
+    </div>
+
+    <!-- EU Macro -->
+    <div class="card">
+        <div class="card-title">EU-Makrodaten</div>
+        {% if macro and macro.get('eu') %}
+        <table>
+            <tbody>
+                {% for key, item in macro['eu'].items() %}
+                <tr>
+                    <td style="font-size: 13px; color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
+                    <td class="text-right" style="font-weight: 600;">
+                        {% if item is mapping %}
+                            {{ item.get('value', '–') }}
+                        {% else %}
+                            {{ item }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><div class="empty-state-text">Keine EU-Daten</div></div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Fear & Greed -->
+{% if macro and macro.get('fear_greed') %}
+{% set fg = macro['fear_greed'] %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Fear & Greed Index</div>
+    <div style="display: flex; align-items: center; gap: 32px; padding: 16px 0;">
+        <div style="text-align: center;">
+            <div style="font-size: 48px; font-weight: 700;
+                {% if fg.value <= 25 %}color: var(--red);
+                {% elif fg.value <= 45 %}color: var(--yellow);
+                {% elif fg.value <= 55 %}color: var(--text-primary);
+                {% elif fg.value <= 75 %}color: var(--green);
+                {% else %}color: var(--green);{% endif %}
+            ">{{ fg.value|round(0)|int }}</div>
+            <div style="font-size: 14px; color: var(--text-secondary); font-weight: 600; text-transform: capitalize;">{{ fg.rating }}</div>
+        </div>
+        <div style="flex: 1;">
+            <!-- Gauge Bar -->
+            <div style="height: 24px; background: linear-gradient(to right, #ef4444, #eab308 45%, #22c55e); border-radius: 8px; position: relative; box-shadow: 0 2px 12px rgba(0,0,0,0.3);">
+                <div style="position: absolute; left: {{ fg.value|round(0)|int }}%; top: -4px; width: 5px; height: 32px; background: white; border-radius: 3px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(255,255,255,0.4);"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--text-muted);">
+                <span>Extreme Fear</span><span>Neutral</span><span>Extreme Greed</span>
+            </div>
+            {% if fg.previous_1_week is defined %}
+            <div style="margin-top: 12px; display: flex; gap: 24px; font-size: 12px; color: var(--text-muted);">
+                <span>Vorwoche: <strong style="color: var(--text-secondary);">{{ fg.previous_1_week|round(0)|int }}</strong></span>
+                <span>Vormonat: <strong style="color: var(--text-secondary);">{{ fg.previous_1_month|round(0)|int }}</strong></span>
+                <span>Vorjahr: <strong style="color: var(--text-secondary);">{{ fg.previous_1_year|round(0)|int }}</strong></span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Calendar -->
+{% if calendar %}
+<div class="charts-grid">
+    <!-- Earnings -->
+    <div class="card">
+        <div class="card-title">Earnings-Kalender</div>
+        {% if calendar.get('earnings') %}
+        <table>
+            <thead><tr><th>Ticker</th><th>Datum</th></tr></thead>
+            <tbody>
+                {% for ticker, date in calendar['earnings'].items() %}
+                <tr>
+                    <td><span class="ticker-badge">{{ ticker }}</span></td>
+                    <td>{{ date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><div class="empty-state-text">Keine anstehenden Earnings</div></div>
+        {% endif %}
+    </div>
+
+    <!-- Macro Events -->
+    <div class="card">
+        <div class="card-title">Makro-Events</div>
+        {% if calendar.get('macro_events') %}
+        <table>
+            <thead><tr><th>Event</th><th>Datum</th></tr></thead>
+            <tbody>
+                {% for event in calendar['macro_events'] %}
+                <tr>
+                    <td>{{ event.name if event is mapping else event }}</td>
+                    <td class="text-muted">{{ event.date if event is mapping else '' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state"><div class="empty-state-text">Keine Events</div></div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

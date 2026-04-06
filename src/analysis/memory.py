@@ -50,7 +50,7 @@ def _save_json(filename: str, data):
         json.dump(data, f, indent=2, ensure_ascii=False, default=str)
 
 
-def save_briefing_summary(summary: str, recommendations: list[dict], market_regime: str = None):
+def save_briefing_summary(summary: str, recommendations: list[dict], market_regime: str = None, full_text: str = None):
     """Speichert eine Zusammenfassung des Briefings."""
     briefings = _load_json("briefings.json", [])
     briefings.append({
@@ -58,6 +58,7 @@ def save_briefing_summary(summary: str, recommendations: list[dict], market_regi
         "summary": summary,
         "recommendation_count": len(recommendations),
         "had_actions": any(r.get("action") not in (None, "hold", "watch") for r in recommendations),
+        "full_text": full_text,
     })
     # Nur die letzten 20 Briefings behalten
     briefings = briefings[-20:]
@@ -65,14 +66,23 @@ def save_briefing_summary(summary: str, recommendations: list[dict], market_regi
 
 
 def save_recommendations(recommendations: list[dict]):
-    """Speichert neue Empfehlungen und trackt alte."""
+    """Speichert neue Empfehlungen. Ersetzt offene Duplikate für denselben Ticker."""
     existing = _load_json("recommendations.json", [])
 
     for rec in recommendations:
         rec["date"] = datetime.now().isoformat()
         rec["status"] = "open"
         rec["outcome"] = None
-        existing.append(rec)
+
+        # Offene Empfehlung für denselben Ticker ersetzen statt duplizieren
+        replaced = False
+        for i, old in enumerate(existing):
+            if old.get("ticker") == rec.get("ticker") and old.get("status") == "open":
+                existing[i] = rec
+                replaced = True
+                break
+        if not replaced:
+            existing.append(rec)
 
     # Nur die letzten 50 behalten
     existing = existing[-50:]

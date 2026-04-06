@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Fehler — claudefolio{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: center; min-height: 60vh;">
+    <div class="card" style="max-width: 500px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">&#9888;</div>
+        <h2 style="font-size: 18px; margin-bottom: 8px;">Etwas ist schiefgelaufen</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">{{ error }}</p>
+        <a href="/" class="btn btn-accent">Zurück zum Dashboard</a>
+    </div>
+</div>
+{% endblock %}

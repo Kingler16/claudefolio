@@ -22,6 +22,34 @@ MAX_MESSAGE_LENGTH = 4096
 # Pending trades die auf Bestätigung warten
 _pending_trades = {}
 
+MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
+
+
+def close_recommendation_on_trade(ticker: str, trade_action: str):
+    """Schließt offene Empfehlungen wenn ein Trade geloggt wird."""
+    recs_path = MEMORY_DIR / "recommendations.json"
+    if not recs_path.exists():
+        return
+
+    with open(recs_path) as f:
+        recs = json.load(f)
+
+    updated = False
+    for rec in recs:
+        if rec.get("status") != "open":
+            continue
+        rec_ticker = rec.get("ticker", "")
+        # Match: exakter Ticker oder ohne Exchange-Suffix (z.B. ASML.AS -> ASML)
+        if rec_ticker == ticker or rec_ticker.split(".")[0] == ticker or ticker.split(".")[0] == rec_ticker:
+            rec["status"] = "executed"
+            rec["outcome"] = f"Trade ausgeführt ({trade_action})"
+            updated = True
+            logger.info(f"Empfehlung geschlossen: {rec_ticker} ({trade_action})")
+
+    if updated:
+        with open(recs_path, "w") as f:
+            json.dump(recs, f, indent=2, ensure_ascii=False)
+
 
 async def send_briefing(bot_token: str, chat_id: str, text: str):
     """Sendet ein Briefing als Telegram-Nachricht(en)."""
@@ -248,6 +276,9 @@ def create_bot_app(bot_token: str, chat_id: str, on_ticker_request=None, on_brie
             if trade:
                 success = update_portfolio_position(trade["action"], trade["ticker"], trade["shares"], trade["price"])
                 if success:
+                    # Offene Empfehlung für diesen Ticker schließen
+                    close_recommendation_on_trade(trade["ticker"], trade["action"])
+
                     emoji = "📉" if trade["action"] == "sell" else "📈"
                     await query.edit_message_text(
                         f"{emoji} Portfolio aktualisiert: {trade['shares']} {trade['ticker']} "
@@ -486,6 +517,9 @@ def create_bot_app(bot_token: str, chat_id: str, on_ticker_request=None, on_brie
             portfolio["last_updated"] = datetime.now().strftime("%Y-%m-%d")
             with open(portfolio_path, "w") as f:
                 json.dump(portfolio, f, indent=2, ensure_ascii=False)
+
+            # Offene Empfehlung schließen
+            close_recommendation_on_trade(ticker, action)
 
             emoji = "📈" if action == "buy" else "📉"
             await query.edit_message_text(

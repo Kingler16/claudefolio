@@ -4,3 +4,6 @@ python-telegram-bot>=21.0
 requests>=2.31
 feedparser>=6.0
 weasyprint>=62.0
+fastapi>=0.115
+uvicorn[standard]>=0.32
+jinja2>=3.1

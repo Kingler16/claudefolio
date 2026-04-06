@@ -1,0 +1,51 @@
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">
+    &#9776;
+</button>
+
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="sidebar-logo">cf</div>
+        <div>
+            <div class="sidebar-title">claudefolio</div>
+            <div class="sidebar-subtitle">{{ t.nav.brand }}</div>
+        </div>
+    </div>
+
+    <ul class="sidebar-nav">
+        <li>
+            <a href="/" class="{{ 'active' if page == 'dashboard' }}">
+                <span class="nav-icon">&#9673;</span> {{ t.nav.dashboard }}
+            </a>
+        </li>
+        <li>
+            <a href="/portfolio" class="{{ 'active' if page == 'portfolio' }}">
+                <span class="nav-icon">&#9830;</span> {{ t.nav.portfolio }}
+            </a>
+        </li>
+        <li>
+            <a href="/analysis" class="{{ 'active' if page == 'analysis' }}">
+                <span class="nav-icon">&#9670;</span> {{ t.nav.analyse }}
+            </a>
+        </li>
+        <li>
+            <a href="/market" class="{{ 'active' if page == 'market' }}">
+                <span class="nav-icon">&#9678;</span> {{ t.nav.markt }}
+            </a>
+        </li>
+        <li>
+            <a href="/briefings" class="{{ 'active' if page == 'briefings' }}">
+                <span class="nav-icon">&#9671;</span> {{ t.nav.briefings }}
+            </a>
+        </li>
+        <li>
+            <a href="/recommendations" class="{{ 'active' if page == 'recommendations' }}">
+                <span class="nav-icon">&#10022;</span> {{ t.nav.empfehlungen }}
+            </a>
+        </li>
+        <li style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 8px;">
+            <a href="/settings" class="{{ 'active' if page == 'settings' }}">
+                <span class="nav-icon">&#9881;</span> {{ t.nav.get('settings', 'Einstellungen') }}
+            </a>
+        </li>
+    </ul>
+</nav>

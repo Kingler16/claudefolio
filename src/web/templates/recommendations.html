@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Empfehlungen — claudefolio{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Empfehlungen</h1>
+        <div class="page-subtitle">AI-Empfehlungen & Performance-Tracking</div>
+    </div>
+</div>
+
+{% if recommendations %}
+{% set open_recs = recommendations|selectattr('status', 'equalto', 'open')|list %}
+{% set wins = recommendations|selectattr('status', 'equalto', 'target_hit')|list %}
+{% set executed = recommendations|selectattr('status', 'equalto', 'executed')|list %}
+{% set losses = recommendations|selectattr('status', 'equalto', 'stop_hit')|list %}
+{% set cancelled = recommendations|selectattr('status', 'equalto', 'cancelled')|list %}
+{% set total_closed = wins|length + losses|length + executed|length %}
+{% set hit_rate = (wins|length / total_closed * 100)|round(0) if total_closed > 0 else 0 %}
+
+<!-- Separate open recs into actionable (buy/sell) and watchlist (watch/hold) -->
+{% set action_recs = [] %}
+{% set watch_recs = [] %}
+{% for rec in open_recs %}
+    {% if rec.action in ['buy', 'sell'] %}
+        {% set _ = action_recs.append(rec) %}
+    {% else %}
+        {% set _ = watch_recs.append(rec) %}
+    {% endif %}
+{% endfor %}
+
+<!-- KPI Stats mit Farben -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <div class="kpi-card" style="border-left: 3px solid var(--accent);">
+        <div class="kpi-label">Offen</div>
+        <div class="kpi-value text-accent">{{ action_recs|length }}</div>
+    </div>
+    <div class="kpi-card" style="border-left: 3px solid var(--yellow);">
+        <div class="kpi-label">Watchlist</div>
+        <div class="kpi-value" style="color: var(--yellow);">{{ watch_recs|length }}</div>
+    </div>
+    <div class="kpi-card" style="border-left: 3px solid var(--green);">
+        <div class="kpi-label">Ausgeführt</div>
+        <div class="kpi-value text-green">{{ (wins|length + executed|length) }}</div>
+    </div>
+    <div class="kpi-card" style="border-left: 3px solid var(--red);">
+        <div class="kpi-label">Stop ausgelöst</div>
+        <div class="kpi-value text-red">{{ losses|length }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Hit-Rate</div>
+        <div class="kpi-value {% if hit_rate >= 60 %}text-green{% elif hit_rate >= 40 %}text-yellow{% else %}text-red{% endif %}">{{ hit_rate|int }}%</div>
+    </div>
+</div>
+
+<!-- Active Recommendations (BUY / SELL) -->
+{% if action_recs %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Aktive Empfehlungen</div>
+    <div style="display: grid; gap: 12px;">
+        {% for rec in action_recs %}
+        <div id="rec-{{ rec.ticker|replace('.','_') }}" style="background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px; padding: 16px; border-left: 4px solid {{ 'var(--green)' if rec.action == 'buy' else 'var(--red)' }};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span class="ticker-badge">{{ rec.ticker }}</span>
+                        <span style="padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+                            {% if rec.action == 'buy' %}background: var(--green-bg); color: var(--green);
+                            {% else %}background: var(--red-bg); color: var(--red);{% endif %}">
+                            {{ rec.action|upper }}
+                        </span>
+                        <span class="text-muted" style="font-size: 12px;">{{ rec.date[:10] if rec.date else '' }}</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px;">
+                        {{ rec.reasoning or '–' }}
+                    </div>
+                    <div style="display: flex; gap: 20px; font-size: 13px;">
+                        {% if rec.entry_price %}
+                        <span>Einstieg: <strong>{{ rec.entry_price|eur }}</strong></span>
+                        {% endif %}
+                        {% if rec.target_price %}
+                        <span>Ziel: <strong class="text-green">{{ rec.target_price|eur }}</strong></span>
+                        {% endif %}
+                        {% if rec.stop_loss %}
+                        <span>Stop: <strong class="text-red">{{ rec.stop_loss|eur }}</strong></span>
+                        {% endif %}
+                        {% if rec.get('unrealized_pct') is not none and rec.unrealized_pct is number %}
+                        <span>P&L: <strong class="{{ 'positive' if rec.unrealized_pct >= 0 else 'negative' }}">{{ rec.unrealized_pct|pct }}</strong></span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-left: 16px; flex-shrink: 0;">
+                    <button class="btn" style="padding:6px 12px; font-size:12px; color:var(--green); border-color:var(--green);" onclick="closeRec('{{ rec.ticker }}', 'executed')" title="Als ausgeführt markieren">&#10003; Erledigt</button>
+                    <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="closeRec('{{ rec.ticker }}', 'cancelled')" title="Verwerfen">&#10005;</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Watchlist (WATCH / HOLD) -->
+{% if watch_recs %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Watchlist</div>
+    <div style="display: grid; gap: 10px;">
+        {% for rec in watch_recs %}
+        <div style="background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; border-left: 4px solid {{ 'var(--yellow)' if rec.action == 'watch' else 'var(--accent)' }};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <span class="ticker-badge">{{ rec.ticker }}</span>
+                        <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+                            {% if rec.action == 'watch' %}background: var(--yellow-bg); color: var(--yellow);
+                            {% else %}background: var(--accent-bg); color: var(--accent-light);{% endif %}">
+                            {{ rec.action|upper }}
+                        </span>
+                        <span class="text-muted" style="font-size: 12px;">{{ rec.date[:10] if rec.date else '' }}</span>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+                        {{ rec.reasoning or '–' }}
+                    </div>
+                    {% if rec.target_price or rec.stop_loss %}
+                    <div style="display: flex; gap: 20px; font-size: 12px; margin-top: 6px; color: var(--text-secondary);">
+                        {% if rec.target_price %}
+                        <span>Ziel: <strong>{{ rec.target_price|eur }}</strong></span>
+                        {% endif %}
+                        {% if rec.stop_loss %}
+                        <span>Stop: <strong class="text-red">{{ rec.stop_loss|eur }}</strong></span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <button class="btn" style="padding:4px 8px; font-size:11px; margin-left:12px; flex-shrink:0;" onclick="closeRec('{{ rec.ticker }}', 'cancelled')" title="Von Watchlist entfernen">&#10005;</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Closed Recommendations -->
+{% set closed_recs = wins + executed + losses + cancelled %}
+{% if closed_recs %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Abgeschlossen</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Ticker</th>
+                    <th>Aktion</th>
+                    <th>Status</th>
+                    <th>Ergebnis</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in closed_recs %}
+                <tr>
+                    <td class="text-muted">{{ rec.date[:10] if rec.date else '–' }}</td>
+                    <td><span class="ticker-badge">{{ rec.ticker }}</span></td>
+                    <td>{{ rec.action|upper }}</td>
+                    <td>
+                        <span class="rec-status {{ rec.status }}">
+                            {% if rec.status == 'target_hit' %}Ziel erreicht
+                            {% elif rec.status == 'executed' %}Ausgeführt
+                            {% elif rec.status == 'stop_hit' %}Stop ausgelöst
+                            {% elif rec.status == 'cancelled' %}Verworfen
+                            {% else %}{{ rec.status }}{% endif %}
+                        </span>
+                    </td>
+                    <td style="font-size: 12px; color: var(--text-muted);">{{ rec.outcome or '–' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-state-text">Noch keine Empfehlungen</div>
+        <div class="empty-state-hint">Empfehlungen werden nach dem ersten Briefing angezeigt</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Position Theses -->
+{% if notes.get('position_theses') %}
+<div class="card" style="margin-top: 24px;">
+    <div class="card-title">Investment-Thesen</div>
+    {% for ticker, thesis in notes['position_theses'].items() %}
+    <div style="padding: 10px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span class="ticker-badge">{{ ticker }}</span>
+            <span class="text-muted" style="font-size: 11px;">{{ thesis.date[:10] if thesis.date else '' }}</span>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            {{ thesis.thesis if thesis is mapping else thesis }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function closeRec(ticker, status) {
+    const label = status === 'executed' ? 'Ausgeführt' : status === 'cancelled' ? 'Verworfen' : status;
+    if (!confirm(ticker + ' als "' + label + '" markieren?')) return;
+
+    fetch('/api/recommendations/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: ticker, status: status })
+    })
+    .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+    .then(({ ok, data }) => {
+        if (ok) location.reload();
+        else alert('Fehler: ' + (data.error || 'Unbekannt'));
+    })
+    .catch(() => alert('Verbindungsfehler'));
+}
+</script>
+{% endblock %}

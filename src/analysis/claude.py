@@ -7,6 +7,7 @@ import json
 import logging
 import re
 import subprocess
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,25 @@ def ask_claude(system_prompt: str, user_prompt: str, timeout: int = 1200) -> dic
     Ruft Claude Code CLI auf und gibt Analyse + strukturierte Daten zurück.
     Prompt wird via stdin übergeben (keine Längenlimitierung).
     """
+    # Claude CLI finden: Settings > shutil.which > bekannte Pfade > fallback
+    import shutil
+    claude_bin = "claude"
+    try:
+        settings_path = Path(__file__).parent.parent.parent / "config" / "settings.json"
+        with open(settings_path) as f:
+            settings = json.load(f)
+        claude_bin = settings.get("claude", {}).get("command", "claude")
+    except Exception:
+        pass
+    if claude_bin == "claude":
+        found = shutil.which("claude")
+        if found:
+            claude_bin = found
+        elif Path("/usr/local/bin/claude").exists():
+            claude_bin = "/usr/local/bin/claude"
+
     cmd = [
-        "claude",
+        claude_bin,
         "--print",
         "--system-prompt", system_prompt,
         "--tools", "",

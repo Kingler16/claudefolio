@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+{% block title %}Portfolio — claudefolio{% endblock %}
+
+{% block head %}
+<script src="/static/vendor/chart.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Portfolio</h1>
+        <div class="page-subtitle">Detailansicht deiner Positionen</div>
+    </div>
+    <button class="btn btn-accent" onclick="document.getElementById('tradeModal').classList.add('open')">
+        + Trade loggen
+    </button>
+</div>
+
+<!-- Trade Modal -->
+<div id="tradeModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="card" style="width: 420px; max-width: 95vw;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+            <div class="card-title" style="margin:0;">Trade loggen</div>
+            <span style="cursor:pointer; font-size:20px; color:var(--text-muted);" onclick="document.getElementById('tradeModal').classList.remove('open')">&#10005;</span>
+        </div>
+        <form id="tradeForm" onsubmit="submitTrade(event)">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <label style="flex:1;">
+                    <input type="radio" name="action" value="buy" checked>
+                    <span style="color:var(--green); font-weight:600;">Kauf</span>
+                </label>
+                <label style="flex:1;">
+                    <input type="radio" name="action" value="sell">
+                    <span style="color:var(--red); font-weight:600;">Verkauf</span>
+                </label>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Ticker</label>
+                <input type="text" name="ticker" required placeholder="z.B. AAPL, ASML.AS" style="width:100%; padding:8px 12px; background:var(--bg-primary); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:14px;" list="tickerList">
+                <datalist id="tickerList">
+                    {% for pos in overview.positions %}
+                    <option value="{{ pos.ticker }}">{{ pos.name }}</option>
+                    {% endfor %}
+                </datalist>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Stück</label>
+                    <input type="number" name="shares" required step="0.01" min="0.01" placeholder="0.00" style="width:100%; padding:8px 12px; background:var(--bg-primary); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:14px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Preis pro Stück</label>
+                    <input type="number" name="price" required step="0.01" min="0.01" placeholder="0.00" style="width:100%; padding:8px 12px; background:var(--bg-primary); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:14px;">
+                </div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Konto</label>
+                <select name="account" required style="width:100%; padding:8px 12px; background:var(--bg-primary); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:14px;">
+                    {% for acc_name, acc_data in overview.accounts_grouped.items() %}
+                    <option value="{{ acc_name }}">{{ acc_data.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div id="tradeMsg" style="display:none; margin-bottom:10px; padding:8px 12px; border-radius:8px; font-size:13px;"></div>
+            <button type="submit" class="btn btn-accent" style="width:100%; justify-content:center;" id="tradeSubmitBtn">
+                Trade speichern
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Currency + Sector Breakdown -->
+<div class="charts-grid" style="margin-bottom: 24px;">
+    <div class="card">
+        <div class="card-title">Währungs-Exposure</div>
+        <div style="height: 250px;">
+            <canvas id="currencyChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">Sektor-Aufteilung</div>
+        <div style="height: 250px;">
+            <canvas id="sectorChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Per-Account Breakdown -->
+<div class="account-grid" style="margin-bottom: 24px;">
+    {% for account_name, account_data in overview.accounts_grouped.items() %}
+    <div class="account-card">
+        <div class="account-header">
+            <span class="account-name">{{ account_data.display_name }}</span>
+            <div style="text-align: right;">
+                <span class="account-value">{{ account_data.total_value|eur }}</span>
+                <div style="font-size: 12px;" class="{{ 'positive' if account_data.total_pnl >= 0 else 'negative' }}">
+                    {{ account_data.total_pnl|eur }}
+                </div>
+            </div>
+        </div>
+        {% for pos in account_data.positions %}
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+            <div>
+                <div style="font-size: 13px; font-weight: 500;">{{ pos.name }}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">
+                    <span class="ticker-badge">{{ pos.ticker or '–' }}</span>
+                    {{ pos.shares|number }} Stk
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 13px; font-weight: 600;">{{ pos.current_value_eur|eur }}</div>
+                <div style="font-size: 11px;" class="{{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}">
+                    {{ pos.pnl_eur|eur }} ({{ pos.pnl_pct|pct }})
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Bank Accounts -->
+{% if overview.bank_accounts %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Bankkonten</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Konto</th>
+                <th>Bank</th>
+                <th class="text-right">Wert</th>
+                <th class="text-right">Zinssatz</th>
+                <th>Typ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for acc in overview.bank_accounts %}
+            <tr>
+                <td>{{ acc.name }}</td>
+                <td class="text-muted">{{ acc.bank }}</td>
+                <td class="text-right" style="font-weight: 600;">{{ acc.value|eur }}</td>
+                <td class="text-right text-accent">{{ acc.interest }}%</td>
+                <td>
+                    {% if acc.is_depot_cash %}
+                    <span class="rec-status open">Depot-Cash</span>
+                    {% else %}
+                    <span class="rec-status target_hit">Frei verfügbar</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            <tr style="border-top: 2px solid var(--border);">
+                <td colspan="2" style="font-weight: 600;">Gesamt Cash</td>
+                <td class="text-right" style="font-weight: 700; font-size: 15px;">{{ overview.cash_total|eur }}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Full Positions Table with more details -->
+<div class="card">
+    <div class="card-title">Alle Positionen — Details</div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Ticker</th>
+                    <th class="text-right">Kurs</th>
+                    <th class="text-right">Buy-In</th>
+                    <th class="text-right">Wert</th>
+                    <th class="text-right">P&L</th>
+                    <th class="text-right">1M</th>
+                    <th class="text-right">6M</th>
+                    <th class="text-right">1Y</th>
+                    <th>Sektor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pos in overview.positions %}
+                <tr>
+                    <td>{{ pos.name }}</td>
+                    <td><span class="ticker-badge">{{ pos.ticker or '–' }}</span></td>
+                    <td class="text-right">{{ pos.current_price_eur|eur }}</td>
+                    <td class="text-right text-muted">{{ pos.buy_in_eur|eur }}</td>
+                    <td class="text-right" style="font-weight: 600;">{{ pos.current_value_eur|eur }}</td>
+                    <td class="text-right {{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}">
+                        {{ pos.pnl_pct|pct }}
+                    </td>
+                    <td class="text-right {{ 'positive' if pos.perf_1m_pct and pos.perf_1m_pct >= 0 else 'negative' if pos.perf_1m_pct else '' }}">
+                        {{ pos.perf_1m_pct|pct if pos.perf_1m_pct is not none else '–' }}
+                    </td>
+                    <td class="text-right {{ 'positive' if pos.perf_6m_pct and pos.perf_6m_pct >= 0 else 'negative' if pos.perf_6m_pct else '' }}">
+                        {{ pos.perf_6m_pct|pct if pos.perf_6m_pct is not none else '–' }}
+                    </td>
+                    <td class="text-right {{ 'positive' if pos.perf_1y_pct and pos.perf_1y_pct >= 0 else 'negative' if pos.perf_1y_pct else '' }}">
+                        {{ pos.perf_1y_pct|pct if pos.perf_1y_pct is not none else '–' }}
+                    </td>
+                    <td class="text-muted" style="font-size: 11px;">{{ pos.sector or '–' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const currencyExposure = {{ overview.currency_exposure|tojson }};
+const sectorBreakdown = {{ overview.sector_breakdown|tojson }};
+
+// Currency Chart
+new Chart(document.getElementById('currencyChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(currencyExposure),
+        datasets: [{
+            data: Object.values(currencyExposure),
+            backgroundColor: ['#3b82f6', '#22c55e'],
+            borderColor: '#0f172a',
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } }
+        }
+    }
+});
+
+// Sector Chart
+const sectorColors = ['#3b82f6','#22c55e','#ef4444','#eab308','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#a855f7','#64748b'];
+new Chart(document.getElementById('sectorChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(sectorBreakdown),
+        datasets: [{
+            data: Object.values(sectorBreakdown),
+            backgroundColor: sectorColors.slice(0, Object.keys(sectorBreakdown).length),
+            borderColor: '#0f172a',
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 6 } }
+        }
+    }
+});
+
+// ─── ESC schließt Modal ───
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('tradeModal').classList.remove('open');
+});
+
+// ─── Trade Form Submit ───
+function submitTrade(e) {
+    e.preventDefault();
+    const form = document.getElementById('tradeForm');
+    const msg = document.getElementById('tradeMsg');
+    const btn = document.getElementById('tradeSubmitBtn');
+    const data = Object.fromEntries(new FormData(form));
+    data.shares = parseFloat(data.shares);
+    data.price = parseFloat(data.price);
+
+    btn.disabled = true;
+    btn.textContent = 'Speichere...';
+
+    fetch('/api/trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+    .then(({ ok, data: resp }) => {
+        msg.style.display = 'block';
+        if (ok) {
+            msg.style.background = 'var(--green-bg)';
+            msg.style.color = 'var(--green)';
+            msg.textContent = resp.message;
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            msg.style.background = 'var(--red-bg)';
+            msg.style.color = 'var(--red)';
+            msg.textContent = resp.error;
+            btn.disabled = false;
+            btn.textContent = 'Trade speichern';
+        }
+    })
+    .catch(() => {
+        msg.style.display = 'block';
+        msg.style.background = 'var(--red-bg)';
+        msg.style.color = 'var(--red)';
+        msg.textContent = 'Verbindungsfehler';
+        btn.disabled = false;
+        btn.textContent = 'Trade speichern';
+    });
+}
+</script>
+{% endblock %}

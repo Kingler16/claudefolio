@@ -9,6 +9,9 @@
   "fred": {
     "api_key": ""
   },
+  "finnhub": {
+    "api_key": ""
+  },
   "schedule": {
     "briefing_days": ["monday", "thursday"],
     "briefing_time": "07:00",
@@ -24,5 +27,9 @@
     "primary_source": "yfinance",
     "fallback_source": "twelvedata",
     "twelvedata_api_key": ""
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 8080
   }
 }

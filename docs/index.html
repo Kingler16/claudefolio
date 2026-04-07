@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>claudefolio — AI-Powered Wealth Advisor</title>
+    <meta name="description" content="Self-hosted AI wealth advisor with web dashboard and Telegram bot. Portfolio tracking, market analysis, and investment briefings powered by Claude.">
+    <meta property="og:title" content="claudefolio — AI-Powered Wealth Advisor">
+    <meta property="og:description" content="Self-hosted portfolio tracker with AI briefings, dark-themed dashboard, and Telegram bot. Runs on Raspberry Pi.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kingler16.github.io/claudefolio">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --border: #1e293b;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --text3: #64748b;
+            --accent: #3b82f6;
+            --accent2: #60a5fa;
+            --green: #4ade80;
+            --red: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ─── Nav ─── */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 16px 0;
+            background: rgba(10, 14, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text2);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text); }
+
+        .btn-github {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-github:hover { background: #273548; border-color: var(--text3); }
+
+        /* ─── Hero ─── */
+        .hero {
+            padding: 140px 24px 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent2);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 64px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent2), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text2);
+            max-width: 600px;
+            margin: 0 auto 36px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--accent);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { background: var(--bg3); border-color: var(--text3); }
+
+        .hero-stats {
+            display: flex;
+            gap: 48px;
+            justify-content: center;
+            margin-top: 48px;
+            padding-top: 36px;
+            border-top: 1px solid var(--border);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
+        .stat-label { font-size: 13px; color: var(--text3); margin-top: 2px; }
+
+        /* ─── Screenshot ─── */
+        .screenshot-section {
+            padding: 0 24px 80px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .screenshot-wrapper {
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.05);
+            background: var(--bg2);
+            position: relative;
+        }
+
+        .screenshot-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .screenshot-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .screenshot-url {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text3);
+        }
+
+        .screenshot-img {
+            width: 100%;
+            display: block;
+        }
+
+        .screenshot-placeholder {
+            padding: 60px 40px;
+            text-align: center;
+            color: var(--text3);
+            font-size: 15px;
+        }
+
+        /* ─── Features ─── */
+        .features {
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-sub {
+            font-size: 16px;
+            color: var(--text2);
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 28px;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text2);
+            line-height: 1.6;
+        }
+
+        /* ─── How It Works ─── */
+        .how-it-works {
+            padding: 80px 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: grid;
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent2);
+            flex-shrink: 0;
+        }
+
+        .step-content h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .step-content p { font-size: 14px; color: var(--text2); }
+
+        .step-code {
+            margin-top: 8px;
+            padding: 10px 14px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 13px;
+            color: var(--accent2);
+        }
+
+        /* ─── Tech Stack ─── */
+        .tech-stack {
+            padding: 80px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .tech-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 36px;
+        }
+
+        .tech-tag {
+            padding: 8px 18px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+        }
+
+        /* ─── CTA ─── */
+        .cta {
+            padding: 80px 24px;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 48px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .cta h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+        .cta p { font-size: 15px; color: var(--text2); margin-bottom: 24px; }
+
+        /* ─── Footer ─── */
+        footer {
+            padding: 32px 24px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text3);
+            border-top: 1px solid var(--border);
+        }
+
+        footer a { color: var(--text2); text-decoration: none; }
+        footer a:hover { color: var(--text); }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .hero-stats { gap: 24px; }
+            .nav-links { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 32px; }
+            .hero-buttons { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-brand">
+            <div class="nav-logo">cf</div>
+            claudefolio
+        </a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">Setup</a>
+            <a href="https://github.com/Kingler16/claudefolio/wiki">Docs</a>
+            <a href="https://github.com/Kingler16/claudefolio" class="btn-github">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                GitHub
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-badge">Open Source &middot; Self-Hosted &middot; Zero API Costs</div>
+    <h1>Your AI-Powered<br><span class="gradient">Wealth Advisor</span></h1>
+    <p>Automated portfolio monitoring, market analysis, and investment briefings. Web dashboard + Telegram bot, powered by Claude — runs on a Raspberry Pi.</p>
+    <div class="hero-buttons">
+        <a href="https://github.com/Kingler16/claudefolio" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View on GitHub
+        </a>
+        <a href="https://github.com/Kingler16/claudefolio/wiki/Getting-Started" class="btn-secondary">Get Started</a>
+    </div>
+    <div class="hero-stats">
+        <div>
+            <div class="stat-value">7</div>
+            <div class="stat-label">Dashboard Pages</div>
+        </div>
+        <div>
+            <div class="stat-value">6</div>
+            <div class="stat-label">Data Sources</div>
+        </div>
+        <div>
+            <div class="stat-value">~90MB</div>
+            <div class="stat-label">RAM Usage</div>
+        </div>
+    </div>
+</section>
+
+<!-- Screenshot -->
+<section class="screenshot-section">
+    <div class="screenshot-wrapper">
+        <div class="screenshot-bar">
+            <div class="screenshot-dot" style="background:#ef4444;"></div>
+            <div class="screenshot-dot" style="background:#eab308;"></div>
+            <div class="screenshot-dot" style="background:#22c55e;"></div>
+            <div class="screenshot-url">localhost:8080</div>
+        </div>
+        <div class="screenshot-placeholder">
+            <p style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;">&#128200;</p>
+            <p>Dashboard screenshot coming soon</p>
+            <p style="font-size: 13px; margin-top: 8px;">Dark-themed portfolio overview with KPI cards, allocation chart, and holdings table</p>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+    <h2 class="section-title">Everything You Need</h2>
+    <p class="section-sub">Portfolio tracking, AI analysis, and market data — in one self-hosted package.</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(59,130,246,0.1); color:#60a5fa;">&#128202;</div>
+            <h3>Web Dashboard</h3>
+            <p>7 pages with charts, tables, and KPIs. Portfolio allocation, benchmark comparison, tax-loss harvesting, Fear & Greed gauge. Dark theme, responsive.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(74,222,128,0.1); color:#4ade80;">&#128172;</div>
+            <h3>Telegram Bot</h3>
+            <p>Receive briefings, log trades in natural language, analyze any ticker, and chat with your AI advisor — all from Telegram.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(248,113,113,0.1); color:#f87171;">&#129504;</div>
+            <h3>AI Briefings</h3>
+            <p>Bi-weekly portfolio analysis powered by Claude Opus. Market regime, position-specific insights, actionable recommendations with entry/target/stop.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(250,204,21,0.1); color:#facc15;">&#128176;</div>
+            <h3>Tax Optimization</h3>
+            <p>Automatic tax-loss harvesting analysis. Identifies positions to sell for tax savings, calculates potential savings for your tax regime.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(139,92,246,0.1); color:#a78bfa;">&#128203;</div>
+            <h3>Recommendation Tracking</h3>
+            <p>AI recommendations tracked with BUY/SELL/WATCH status. Automatic outcome detection, hit-rate stats. Trades auto-close matching recommendations.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(6,182,212,0.1); color:#22d3ee;">&#127760;</div>
+            <h3>6 Data Sources</h3>
+            <p>yfinance, FRED, ECB, Brave Search, Bloomberg RSS, Finnhub. Prices, fundamentals, macro data, news, sentiment — all aggregated automatically.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works" id="how-it-works">
+    <h2 class="section-title">Up and Running in 5 Minutes</h2>
+    <p class="section-sub">No Docker, no cloud, no complexity.</p>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h3>Clone & Setup</h3>
+                <p>The interactive wizard handles everything — language, tax regime, Telegram bot, API keys, portfolio import.</p>
+                <div class="step-code">git clone https://github.com/Kingler16/claudefolio.git && cd claudefolio && python3 setup.py</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h3>Run Your First Briefing</h3>
+                <p>Collects market data, runs AI analysis, sends the result to your Telegram.</p>
+                <div class="step-code">python -m src.main briefing</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h3>Start the Dashboard</h3>
+                <p>Open the web dashboard and explore your portfolio visually.</p>
+                <div class="step-code">python -m src.main web &nbsp; # &rarr; http://localhost:8080</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+                <h3>Deploy (Optional)</h3>
+                <p>Put it on a Raspberry Pi for always-on briefings and dashboard access from any device.</p>
+                <div class="step-code">./scripts/deploy.sh admin@your-pi-ip</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tech Stack -->
+<section class="tech-stack">
+    <h2 class="section-title">Built With</h2>
+    <div class="tech-grid">
+        <span class="tech-tag">Python</span>
+        <span class="tech-tag">Claude Code CLI</span>
+        <span class="tech-tag">FastAPI</span>
+        <span class="tech-tag">Jinja2</span>
+        <span class="tech-tag">HTMX</span>
+        <span class="tech-tag">Chart.js</span>
+        <span class="tech-tag">TradingView Charts</span>
+        <span class="tech-tag">yfinance</span>
+        <span class="tech-tag">FRED API</span>
+        <span class="tech-tag">Brave Search</span>
+        <span class="tech-tag">Finnhub</span>
+        <span class="tech-tag">Telegram Bot API</span>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <div class="cta-box">
+        <h2>Ready to Try?</h2>
+        <p>claudefolio is free, open source, and runs on your hardware. Your data stays yours.</p>
+        <a href="https://github.com/Kingler16/claudefolio" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Get Started on GitHub
+        </a>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <p>claudefolio &middot; MIT License &middot; <a href="https://github.com/Kingler16/claudefolio">GitHub</a> &middot; <a href="https://github.com/Kingler16/claudefolio/wiki">Documentation</a></p>
+</footer>
+
+</body>
+</html>

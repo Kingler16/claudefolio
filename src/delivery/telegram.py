@@ -8,11 +8,8 @@ import re
 from pathlib import Path
 
 from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ConversationHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from telegram.constants import ParseMode
-
-# Conversation States für /log
-LOG_ACTION, LOG_TICKER, LOG_SHARES, LOG_PRICE, LOG_ACCOUNT, LOG_CONFIRM = range(6)
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +20,25 @@ MAX_MESSAGE_LENGTH = 4096
 _pending_trades = {}
 
 MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
+
+# Mapping: Depot-Account → zugehöriges Cash-Konto
+ACCOUNT_CASH_MAP = {
+    "trade_republic": "tr_cash",
+    "erste_bank": "erste_abrechnungskonto",
+}
+
+
+def update_cash_on_trade(portfolio: dict, account: str, action: str, shares: float, price_eur: float):
+    """Aktualisiert das Depot-Cash-Konto nach einem Trade. price_eur = Preis pro Stück in EUR."""
+    cash_account = ACCOUNT_CASH_MAP.get(account)
+    if not cash_account or cash_account not in portfolio.get("bank_accounts", {}):
+        return
+    amount = shares * price_eur
+    if action == "sell":
+        portfolio["bank_accounts"][cash_account]["value"] += amount
+    elif action == "buy":
+        portfolio["bank_accounts"][cash_account]["value"] -= amount
+        portfolio["bank_accounts"][cash_account]["value"] = max(0, portfolio["bank_accounts"][cash_account]["value"])
 
 
 def close_recommendation_on_trade(ticker: str, trade_action: str):
@@ -145,12 +161,13 @@ def parse_trade_message(text: str) -> dict | None:
 
 
 def update_portfolio_position(action: str, ticker: str, shares: float, price: float = None) -> bool:
-    """Aktualisiert eine Position im Portfolio."""
+    """Aktualisiert eine Position im Portfolio + Cash-Konto."""
     portfolio_path = CONFIG_DIR / "portfolio.json"
     with open(portfolio_path) as f:
         portfolio = json.load(f)
 
     updated = False
+    matched_account = None
     for account_name, account in portfolio["accounts"].items():
         for pos in account["positions"]:
             pos_ticker = pos.get("ticker", "")
@@ -163,18 +180,23 @@ def update_portfolio_position(action: str, ticker: str, shares: float, price: fl
                     pos["shares"] += shares
                     pos["buy_in"] = new_total / pos["shares"]
                     updated = True
+                    matched_account = account_name
                     break
                 elif action == "sell":
                     pos["shares"] -= shares
                     if pos["shares"] <= 0.001:
                         account["positions"].remove(pos)
                     updated = True
+                    matched_account = account_name
                     break
         if updated:
             break
 
     if updated:
         from datetime import datetime
+        # Cash-Konto updaten (Preis in EUR)
+        if price and matched_account:
+            update_cash_on_trade(portfolio, matched_account, action, shares, price)
         portfolio["last_updated"] = datetime.now().strftime("%Y-%m-%d")
         with open(portfolio_path, "w") as f:
             json.dump(portfolio, f, indent=2, ensure_ascii=False)
@@ -329,8 +351,7 @@ def create_bot_app(bot_token: str, chat_id: str, on_ticker_request=None, on_brie
             "<code>/briefing</code> — Briefing jetzt generieren\n"
             "<code>/status</code> — Portfolio-Übersicht\n\n"
             "<b>Portfolio:</b>\n"
-            "<code>/log</code> — Trade loggen (Formular)\n"
-            "<code>Hab 5 NVDA verkauft bei 180</code> — Trade loggen (Freitext)\n"
+            "<code>Hab 5 NVDA verkauft bei 180</code> — Trade loggen\n"
             "<code>watch TSLA</code> — Zur Watchlist\n"
             "<code>unwatch TSLA</code> — Von Watchlist\n\n"
             "<b>Chat:</b>\n"
@@ -339,225 +360,9 @@ def create_bot_app(bot_token: str, chat_id: str, on_ticker_request=None, on_brie
             parse_mode=ParseMode.HTML,
         )
 
-    # ── /log Conversation Handler ──────────────────────────────
-
-    async def log_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if str(update.effective_chat.id) != str(chat_id):
-            return ConversationHandler.END
-        keyboard = InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("📈 Kauf", callback_data="log_buy"),
-                InlineKeyboardButton("📉 Verkauf", callback_data="log_sell"),
-            ],
-            [InlineKeyboardButton("❌ Abbrechen", callback_data="log_cancel")],
-        ])
-        await update.message.reply_text(
-            "<b>📝 Trade loggen</b>\n\nKauf oder Verkauf?",
-            parse_mode=ParseMode.HTML,
-            reply_markup=keyboard,
-        )
-        return LOG_ACTION
-
-    async def log_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-        if query.data == "log_cancel":
-            await query.edit_message_text("❌ Abgebrochen.")
-            return ConversationHandler.END
-        context.user_data["log_action"] = "buy" if query.data == "log_buy" else "sell"
-        action_text = "kaufen" if query.data == "log_buy" else "verkaufen"
-        await query.edit_message_text(
-            f"<b>📝 Trade: {action_text}</b>\n\nTicker eingeben (z.B. NVDA, ASML.AS):",
-            parse_mode=ParseMode.HTML,
-        )
-        return LOG_TICKER
-
-    async def log_ticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        ticker = update.message.text.strip().upper()
-        context.user_data["log_ticker"] = ticker
-        await update.message.reply_text(
-            f"<b>📝 {ticker}</b>\n\nAnzahl Stück:",
-            parse_mode=ParseMode.HTML,
-        )
-        return LOG_SHARES
-
-    async def log_shares(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        try:
-            shares = float(update.message.text.strip().replace(",", "."))
-            context.user_data["log_shares"] = shares
-        except ValueError:
-            await update.message.reply_text("❌ Ungültige Zahl. Nochmal:")
-            return LOG_SHARES
-        await update.message.reply_text(
-            f"<b>📝 {shares}x {context.user_data['log_ticker']}</b>\n\nKurs pro Stück (in Originalwährung):",
-            parse_mode=ParseMode.HTML,
-        )
-        return LOG_PRICE
-
-    async def log_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        try:
-            price = float(update.message.text.strip().replace(",", ".").replace("€", "").replace("$", ""))
-            context.user_data["log_price"] = price
-        except ValueError:
-            await update.message.reply_text("❌ Ungültiger Preis. Nochmal:")
-            return LOG_PRICE
-
-        # Depot-Auswahl
-        with open(CONFIG_DIR / "portfolio.json") as f:
-            portfolio = json.load(f)
-        accounts = list(portfolio["accounts"].keys())
-
-        buttons = []
-        for acc in accounts:
-            buttons.append([InlineKeyboardButton(acc, callback_data=f"log_acc_{acc}")])
-        buttons.append([InlineKeyboardButton("❌ Abbrechen", callback_data="log_cancel")])
-
-        ticker = context.user_data["log_ticker"]
-        shares = context.user_data["log_shares"]
-        await update.message.reply_text(
-            f"<b>📝 {shares}x {ticker} @ {price}</b>\n\nIn welchem Depot?",
-            parse_mode=ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup(buttons),
-        )
-        return LOG_ACCOUNT
-
-    async def log_account(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-        if query.data == "log_cancel":
-            await query.edit_message_text("❌ Abgebrochen.")
-            return ConversationHandler.END
-
-        account = query.data.replace("log_acc_", "")
-        context.user_data["log_account"] = account
-
-        action = context.user_data["log_action"]
-        ticker = context.user_data["log_ticker"]
-        shares = context.user_data["log_shares"]
-        price = context.user_data["log_price"]
-        action_text = "KAUF" if action == "buy" else "VERKAUF"
-
-        keyboard = InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("✅ Bestätigen", callback_data="log_confirm_yes"),
-                InlineKeyboardButton("❌ Abbrechen", callback_data="log_confirm_no"),
-            ]
-        ])
-        await query.edit_message_text(
-            f"<b>📝 Zusammenfassung</b>\n\n"
-            f"<b>{action_text}</b>\n"
-            f"Ticker: <code>{ticker}</code>\n"
-            f"Stück: <code>{shares}</code>\n"
-            f"Kurs: <code>{price}</code>\n"
-            f"Depot: <code>{account}</code>\n\n"
-            f"Bestätigen?",
-            parse_mode=ParseMode.HTML,
-            reply_markup=keyboard,
-        )
-        return LOG_CONFIRM
-
-    async def log_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
-
-        if query.data == "log_confirm_no":
-            await query.edit_message_text("❌ Abgebrochen.")
-            context.user_data.clear()
-            return ConversationHandler.END
-
-        action = context.user_data["log_action"]
-        ticker = context.user_data["log_ticker"]
-        shares = context.user_data["log_shares"]
-        price = context.user_data["log_price"]
-        account = context.user_data["log_account"]
-
-        # Portfolio updaten
-        portfolio_path = CONFIG_DIR / "portfolio.json"
-        with open(portfolio_path) as f:
-            portfolio = json.load(f)
-
-        success = False
-        if account in portfolio["accounts"]:
-            positions = portfolio["accounts"][account]["positions"]
-
-            if action == "buy":
-                # Existierende Position suchen
-                for pos in positions:
-                    if pos.get("ticker") == ticker or ticker in pos.get("name", "").upper():
-                        old_total = pos["shares"] * pos["buy_in"]
-                        new_total = old_total + (shares * price)
-                        pos["shares"] += shares
-                        pos["buy_in"] = new_total / pos["shares"]
-                        success = True
-                        break
-                if not success:
-                    # Neue Position anlegen
-                    currency = "USD" if not any(c in ticker for c in [".", "AT0"]) else "EUR"
-                    positions.append({
-                        "name": ticker,
-                        "isin": "",
-                        "ticker": ticker,
-                        "shares": shares,
-                        "buy_in": price,
-                        "currency": currency,
-                    })
-                    success = True
-
-            elif action == "sell":
-                for pos in positions:
-                    if pos.get("ticker") == ticker or ticker in pos.get("name", "").upper():
-                        pos["shares"] -= shares
-                        if pos["shares"] <= 0.001:
-                            positions.remove(pos)
-                        success = True
-                        break
-
-        if success:
-            from datetime import datetime
-            portfolio["last_updated"] = datetime.now().strftime("%Y-%m-%d")
-            with open(portfolio_path, "w") as f:
-                json.dump(portfolio, f, indent=2, ensure_ascii=False)
-
-            # Offene Empfehlung schließen
-            close_recommendation_on_trade(ticker, action)
-
-            emoji = "📈" if action == "buy" else "📉"
-            await query.edit_message_text(
-                f"{emoji} <b>Portfolio aktualisiert!</b>\n\n"
-                f"{shares}x {ticker} @ {price} → {account}",
-                parse_mode=ParseMode.HTML,
-            )
-        else:
-            await query.edit_message_text(
-                f"❌ Ticker {ticker} nicht in {account} gefunden.\n"
-                f"Bei Käufen wird eine neue Position angelegt.",
-            )
-
-        context.user_data.clear()
-        return ConversationHandler.END
-
-    async def log_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("❌ Trade-Logging abgebrochen.")
-        context.user_data.clear()
-        return ConversationHandler.END
-
     # ── App zusammenbauen ────────────────────────────────────
 
-    log_conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("log", log_start)],
-        states={
-            LOG_ACTION: [CallbackQueryHandler(log_action)],
-            LOG_TICKER: [MessageHandler(filters.TEXT & ~filters.COMMAND, log_ticker)],
-            LOG_SHARES: [MessageHandler(filters.TEXT & ~filters.COMMAND, log_shares)],
-            LOG_PRICE: [MessageHandler(filters.TEXT & ~filters.COMMAND, log_price)],
-            LOG_ACCOUNT: [CallbackQueryHandler(log_account)],
-            LOG_CONFIRM: [CallbackQueryHandler(log_confirm)],
-        },
-        fallbacks=[CommandHandler("cancel", log_cancel)],
-    )
-
     app = Application.builder().token(bot_token).build()
-    app.add_handler(log_conv_handler)  # Muss vor dem allgemeinen MessageHandler stehen
     app.add_handler(CommandHandler("status", handle_status))
     app.add_handler(CommandHandler("briefing", handle_briefing))
     app.add_handler(CommandHandler("help", handle_help))

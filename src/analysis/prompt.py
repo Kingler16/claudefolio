@@ -230,8 +230,15 @@ def build_portfolio_summary(portfolio: dict, market_data: dict) -> str:
             buy_in = pos["buy_in"]
             currency = pos.get("currency", "EUR")
 
-            # Buy-In in EUR umrechnen
-            buy_in_eur = buy_in if currency == "EUR" else buy_in / eur_usd
+            # Buy-In in EUR: buy_in_eur aus Portfolio nutzen (historischer Kurs),
+            # NICHT den aktuellen EUR/USD-Kurs auf den USD-Buy-In anwenden!
+            if pos.get("buy_in_eur"):
+                buy_in_eur = pos["buy_in_eur"]
+            elif currency == "EUR":
+                buy_in_eur = buy_in
+            else:
+                # Fallback: aktueller Kurs (ungenau bei FX-Schwankungen!)
+                buy_in_eur = buy_in / eur_usd
             invested_eur = shares * buy_in_eur
 
             current_price = None

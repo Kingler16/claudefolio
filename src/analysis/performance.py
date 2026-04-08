@@ -84,11 +84,17 @@ def compute_tax_loss_data(portfolio: dict, market_data: dict, tax_rate: float = 
             if not current_price:
                 continue
 
-            if currency == "USD":
+            # Buy-In in EUR: buy_in_eur aus Portfolio nutzen (historischer Kurs)
+            if pos.get("buy_in_eur"):
+                buy_in_eur = pos["buy_in_eur"]
+            elif currency == "USD":
                 buy_in_eur = buy_in / eur_usd
-                current_eur = current_price / eur_usd
             else:
                 buy_in_eur = buy_in
+
+            if currency == "USD":
+                current_eur = current_price / eur_usd
+            else:
                 current_eur = current_price
 
             pnl_eur = (current_eur - buy_in_eur) * shares

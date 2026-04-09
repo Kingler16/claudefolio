@@ -86,7 +86,7 @@
         <div class="briefing-full" style="display: none; margin-top: 16px;">
             <div style="padding: 20px 24px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 10px;">
                 <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">Vollständiges Briefing</div>
-                <div class="briefing-content">{{ briefing.full_text }}</div>
+                <div class="briefing-content">{{ briefing.full_text|safe }}</div>
             </div>
         </div>
         {% endif %}

@@ -96,7 +96,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 12px; margin-left: 16px; flex-shrink: 0;">
-                    <button class="btn" style="padding:6px 12px; font-size:12px; color:var(--green); border-color:var(--green);" onclick="closeRec('{{ rec.ticker }}', 'executed')" title="Als ausgeführt markieren">&#10003; Erledigt</button>
+                    <button class="btn" style="padding:6px 12px; font-size:12px; color:var(--green); border-color:var(--green);" onclick="executeRec('{{ rec.ticker }}', '{{ rec.action }}', {{ rec.entry_price or 'null' }}, {{ rec.shares or 'null' }})" title="Als ausgeführt markieren">&#10003; Ausgeführt</button>
                     <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="closeRec('{{ rec.ticker }}', 'cancelled')" title="Verwerfen">&#10005;</button>
                 </div>
             </div>
@@ -216,14 +216,33 @@
 
 {% block scripts %}
 <script>
-function closeRec(ticker, status) {
+function executeRec(ticker, action, entryPrice, shares) {
+    const actionLabel = action === 'buy' ? 'Gekauft' : 'Verkauft';
+    const priceStr = prompt(ticker + ' – Zu welchem Kurs ' + actionLabel.toLowerCase() + '?', entryPrice || '');
+    if (priceStr === null) return;
+    const price = parseFloat(priceStr.replace(',', '.'));
+    if (isNaN(price) || price <= 0) { alert('Ungültiger Kurs'); return; }
+
+    let sharesActual = shares;
+    if (shares) {
+        const sharesStr = prompt('Anzahl Stück?', shares);
+        if (sharesStr === null) return;
+        sharesActual = parseFloat(sharesStr.replace(',', '.'));
+        if (isNaN(sharesActual) || sharesActual <= 0) { alert('Ungültige Stückzahl'); return; }
+    }
+
+    const outcome = actionLabel + ': ' + (sharesActual ? sharesActual + ' Stk @ ' : '@ ') + price.toFixed(2) + '€';
+    closeRec(ticker, 'executed', outcome);
+}
+
+function closeRec(ticker, status, outcome) {
     const label = status === 'executed' ? 'Ausgeführt' : status === 'cancelled' ? 'Verworfen' : status;
-    if (!confirm(ticker + ' als "' + label + '" markieren?')) return;
+    if (!outcome && !confirm(ticker + ' als "' + label + '" markieren?')) return;
 
     fetch('/api/recommendations/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: ticker, status: status })
+        body: JSON.stringify({ ticker: ticker, status: status, outcome: outcome || undefined })
     })
     .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
     .then(({ ok, data }) => {

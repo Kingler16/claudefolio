@@ -79,8 +79,14 @@ def compute_portfolio_overview(portfolio: dict, market_data: dict) -> dict:
             name = pos.get("name", ticker or "Unbekannt")
             isin = pos.get("isin", "")
 
-            # Buy-In in EUR
-            buy_in_eur = buy_in if currency == "EUR" else buy_in / eur_usd
+            # Buy-In in EUR: gespeicherten historischen Kurs nutzen, nicht aktuellen FX-Kurs
+            if pos.get("buy_in_eur"):
+                buy_in_eur = pos["buy_in_eur"]
+            elif currency == "EUR":
+                buy_in_eur = buy_in
+            else:
+                # Fallback: aktueller Kurs (ungenau bei FX-Schwankungen)
+                buy_in_eur = buy_in / eur_usd
             invested_eur = shares * buy_in_eur
 
             current_price = None

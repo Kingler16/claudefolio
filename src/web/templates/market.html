@@ -199,10 +199,7 @@
                 </defs>
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(51,65,85,0.3)" stroke-width="14" stroke-linecap="round"/>
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="{{ 251.3 * fg_val / 100 }} 251.3"/>
-                {% set angle = 180 + (fg_val / 100) * 180 %}
-                {% set nx = 100 + 70 * (angle * 3.14159 / 180)|cos %}
-                {% set ny = 100 + 70 * (angle * 3.14159 / 180)|sin %}
-                <circle cx="{{ 100 + 70 * (-1 + 2 * fg_val / 100) * (1 - (fg_val/50 - 1)**2)**0.5 if fg_val != 50 else 100 }}" cy="{{ 100 - 70 * (1 - (fg_val/50 - 1)**2)**0.5 if fg_val != 50 else 30 }}" r="6" fill="white" filter="drop-shadow(0 0 4px rgba(255,255,255,0.5))"/>
+                <circle id="gauge-needle" r="6" fill="white" filter="drop-shadow(0 0 4px rgba(255,255,255,0.5))"/>
                 <text x="100" y="95" text-anchor="middle" fill="{% if fg_val <= 25 %}#ef4444{% elif fg_val <= 45 %}#eab308{% elif fg_val <= 55 %}#f1f5f9{% elif fg_val <= 75 %}#22c55e{% else %}#22c55e{% endif %}" font-size="32" font-weight="800">{{ fg_val }}</text>
                 <text x="100" y="112" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" text-transform="uppercase">
                     {% if fg_val <= 25 %}EXTREME ANGST{% elif fg_val <= 45 %}ANGST{% elif fg_val <= 55 %}NEUTRAL{% elif fg_val <= 75 %}GIER{% else %}EXTREME GIER{% endif %}
@@ -381,6 +378,17 @@ details[open] > summary span:last-child {
 details summary::-webkit-details-marker { display: none; }
 </style>
 <script>
+// Fear & Greed Gauge Needle positionieren
+(function() {
+    const needle = document.getElementById('gauge-needle');
+    if (needle) {
+        const val = {{ fg_val if macro and macro.get('fear_greed') else 50 }};
+        const angle = Math.PI + (val / 100) * Math.PI;
+        needle.setAttribute('cx', 100 + 70 * Math.cos(angle));
+        needle.setAttribute('cy', 100 + 70 * Math.sin(angle));
+    }
+})();
+
 function showTab(tab) {
     document.getElementById('macro-us').style.display = tab === 'us' ? 'block' : 'none';
     document.getElementById('macro-eu').style.display = tab === 'eu' ? 'block' : 'none';

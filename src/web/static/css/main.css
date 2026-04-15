@@ -61,16 +61,15 @@ body {
 .sidebar-logo {
     width: 34px;
     height: 34px;
-    background: var(--accent);
-    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    font-size: 14px;
     flex-shrink: 0;
+}
+
+.sidebar-logo img {
+    width: 100%;
+    height: 100%;
 }
 
 .sidebar-title {

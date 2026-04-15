@@ -363,7 +363,7 @@ def create_bot_app(bot_token: str, chat_id: str, on_ticker_request=None, on_brie
         if str(update.effective_chat.id) != str(chat_id):
             return
         await update.message.reply_text(
-            "<b>claudefolio</b> — AI Wealth Advisor\n\n"
+            "<b>Velora</b> — AI Wealth Advisor\n\n"
             "<b>Analyse:</b>\n"
             "<code>TSLA</code> — Ticker analysieren\n"
             "<code>/briefing</code> — Briefing jetzt generieren\n"

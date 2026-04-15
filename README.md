@@ -1,10 +1,10 @@
 ```
-     ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗███████╗ ██████╗ ██╗     ██╗ ██████╗
-    ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝██╔════╝██╔═══██╗██║     ██║██╔═══██╗
-    ██║     ██║     ███████║██║   ██║██║  ██║█████╗  █████╗  ██║   ██║██║     ██║██║   ██║
-    ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝  ██╔══╝  ██║   ██║██║     ██║██║   ██║
-    ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗██║     ╚██████╔╝███████╗██║╚██████╔╝
-     ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝      ╚═════╝ ╚══════╝╚═╝ ╚═════╝
+    ██╗   ██╗███████╗██╗      ██████╗ ██████╗  █████╗
+    ██║   ██║██╔════╝██║     ██╔═══██╗██╔══██╗██╔══██╗
+    ██║   ██║█████╗  ██║     ██║   ██║██████╔╝███████║
+    ╚██╗ ██╔╝██╔══╝  ██║     ██║   ██║██╔══██╗██╔══██║
+     ╚████╔╝ ███████╗███████╗╚██████╔╝██║  ██║██║  ██║
+      ╚═══╝  ╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
 ```
 
 **Your AI-powered personal wealth advisor.** Automated portfolio monitoring, market analysis, and investment briefings — delivered via a self-hosted web dashboard and Telegram bot.
@@ -15,7 +15,7 @@ Runs on Claude Code with your existing Max/Pro subscription — zero API costs f
 
 ## What It Does
 
-Twice a week, claudefolio collects market data for your entire portfolio, pulls macroeconomic indicators, searches for relevant news, and feeds everything into Claude Opus with a specialized financial analyst system prompt. The result is a comprehensive briefing delivered to your Telegram and viewable on a professional dark-themed web dashboard — like having a CFA on retainer.
+Twice a week, Velora collects market data for your entire portfolio, pulls macroeconomic indicators, searches for relevant news, and feeds everything into Claude Opus with a specialized financial analyst system prompt. The result is a comprehensive briefing delivered to your Telegram and viewable on a professional dark-themed web dashboard — like having a CFA on retainer.
 
 ## Features
 
@@ -53,8 +53,8 @@ Cash-Quote von 31% ist im Extreme-Fear-Umfeld eine Stärke. Abwarten.
 ## Quick Start
 
 ```bash
-git clone https://github.com/Kingler16/claudefolio.git
-cd claudefolio
+git clone https://github.com/Kingler16/velora.git
+cd velora
 
 python3 setup.py          # Interactive setup wizard
 source venv/bin/activate
@@ -127,7 +127,7 @@ Trades logged via Telegram or the web dashboard automatically close matching AI 
 
 ### How Claude Is Used
 
-claudefolio does **not** call the Claude API directly. It shells out to [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) in `--print` mode — no API key needed, uses your Max/Pro subscription, Opus model with high effort, prompts via stdin.
+Velora does **not** call the Claude API directly. It shells out to [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) in `--print` mode — no API key needed, uses your Max/Pro subscription, Opus model with high effort, prompts via stdin.
 
 ## Running Modes
 
@@ -165,14 +165,14 @@ Designed for always-on low-power devices (~90MB RAM).
 cd scripts && ./deploy.sh admin@your-server-ip
 
 # On the server
-cd ~/claudefolio && bash scripts/setup_rockpi.sh
+cd ~/velora && bash scripts/setup_rockpi.sh
 ```
 
 Sets up: Python venv, Claude CLI, cron jobs (briefing + monthly), systemd services (bot + web dashboard with auto-start on boot).
 
 ```bash
-sudo systemctl status claudefolio-bot    # Telegram bot
-sudo systemctl status claudefolio-web    # Web dashboard
+sudo systemctl status velora-bot    # Telegram bot
+sudo systemctl status velora-web    # Web dashboard
 ```
 
 ## API Costs

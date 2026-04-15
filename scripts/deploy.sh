@@ -1,12 +1,12 @@
 #!/bin/bash
-# claudefolio — Deploy to remote server
+# Velora — Deploy to remote server
 set -e
 
 REMOTE="${1:-admin@192.168.1.27}"
-REMOTE_DIR="/home/$(echo $REMOTE | cut -d@ -f1)/claudefolio"
+REMOTE_DIR="/home/$(echo $REMOTE | cut -d@ -f1)/velora"
 LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "=== Deploying claudefolio to $REMOTE:$REMOTE_DIR ==="
+echo "=== Deploying Velora to $REMOTE:$REMOTE_DIR ==="
 
 # 1. Verzeichnisstruktur erstellen
 echo "Creating directories..."

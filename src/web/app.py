@@ -1,5 +1,5 @@
 """
-FastAPI Web-Dashboard für claudefolio.
+FastAPI Web-Dashboard für Velora.
 """
 
 import asyncio
@@ -69,7 +69,7 @@ def format_number(value, decimals=2):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("claudefolio Dashboard gestartet")
+    logger.info("Velora Dashboard gestartet")
     from src.data.cache import get_cache_age_minutes
     age = get_cache_age_minutes("market_data")
     if age is None:
@@ -78,10 +78,10 @@ async def lifespan(app: FastAPI):
     else:
         logger.info(f"Cache gefunden (Alter: {age:.0f} Minuten)")
     yield
-    logger.info("claudefolio Dashboard gestoppt")
+    logger.info("Velora Dashboard gestoppt")
 
 
-app = FastAPI(title="claudefolio Dashboard", lifespan=lifespan)
+app = FastAPI(title="Velora Dashboard", lifespan=lifespan)
 
 # Static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

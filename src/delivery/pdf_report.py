@@ -109,6 +109,7 @@ def build_report_html(content: str, title: str = None, date: datetime = None) ->
     }}
 
     .brand-name {{
+        font-family: 'Space Mono', monospace;
         font-size: 14pt;
         font-weight: 700;
         color: var(--text-primary);
@@ -391,9 +392,9 @@ def build_report_html(content: str, title: str = None, date: datetime = None) ->
 <div class="report-header">
     <div class="header-top">
         <div class="logo-area">
-            <div class="logo-placeholder">C</div>
+            <div class="logo-placeholder">V</div>
             <div>
-                <div class="brand-name">claudefolio</div>
+                <div class="brand-name">Velora</div>
                 <div class="brand-sub">AI Wealth Advisor</div>
             </div>
         </div>
@@ -421,7 +422,7 @@ def build_report_html(content: str, title: str = None, date: datetime = None) ->
         sollten auf Grundlage einer eigenen Analyse und ggf. professioneller Beratung getroffen werden.
     </div>
     <div class="footer-meta">
-        <span>claudefolio &mdash; AI Wealth Advisor</span>
+        <span>Velora &mdash; AI Wealth Advisor</span>
         <span>Generiert: {date.strftime('%d.%m.%Y %H:%M')}</span>
     </div>
 </div>
@@ -478,7 +479,7 @@ def generate_pdf(
 
     # Output-Pfad bestimmen
     if output_path is None:
-        output_dir = Path(tempfile.gettempdir()) / "claudefolio"
+        output_dir = Path(tempfile.gettempdir()) / "velora"
         output_dir.mkdir(parents=True, exist_ok=True)
         filename = f"monatsbericht_{date.strftime('%Y_%m')}.pdf"
         output_path = output_dir / filename

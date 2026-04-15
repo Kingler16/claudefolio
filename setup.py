@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-claudefolio — Interactive Setup Wizard
+Velora — Interactive Setup Wizard
 Guides the user through initial configuration.
 """
 
@@ -14,8 +14,8 @@ from pathlib import Path
 CONFIG_DIR = Path(__file__).parent / "config"
 
 LANGUAGES = {
-    "de": {"name": "Deutsch", "greeting": "Willkommen bei claudefolio!"},
-    "en": {"name": "English", "greeting": "Welcome to claudefolio!"},
+    "de": {"name": "Deutsch", "greeting": "Willkommen bei Velora!"},
+    "en": {"name": "English", "greeting": "Welcome to Velora!"},
 }
 
 COUNTRIES = {
@@ -176,7 +176,7 @@ def setup_apis() -> dict:
 def setup_schedule() -> dict:
     header("Briefing Schedule")
 
-    print("  When should claudefolio send your briefings?\n")
+    print("  When should Velora send your briefings?\n")
     days_input = ask("Briefing days (comma-separated)", "monday,thursday")
     days = [d.strip().lower() for d in days_input.split(",")]
 

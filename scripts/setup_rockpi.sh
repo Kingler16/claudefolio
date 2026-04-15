@@ -1,11 +1,11 @@
 #!/bin/bash
-# claudefolio — Server/RockPi/Raspberry Pi Setup
+# Velora — Server/RockPi/Raspberry Pi Setup
 set -e
 
 INSTALL_DIR="${1:-$(pwd)}"
 USER=$(whoami)
 
-echo "=== claudefolio Server Setup ==="
+echo "=== Velora Server Setup ==="
 
 # 1. System-Pakete
 echo "Installing system packages..."
@@ -25,9 +25,9 @@ pip install --prefer-binary -r requirements.txt
 
 # 4. Cron-Jobs
 echo "Setting up cron jobs..."
-(crontab -l 2>/dev/null; echo "# claudefolio — Briefing Mon+Thu 7:00
+(crontab -l 2>/dev/null; echo "# Velora — Briefing Mon+Thu 7:00
 0 7 * * 1,4 cd $INSTALL_DIR && ./venv/bin/python -m src.main briefing >> $INSTALL_DIR/logs/briefing.log 2>&1
-# claudefolio — Monthly report 1st of month 9:00
+# Velora — Monthly report 1st of month 9:00
 0 9 1 * * cd $INSTALL_DIR && ./venv/bin/python -m src.main monthly >> $INSTALL_DIR/logs/monthly.log 2>&1") | crontab -
 
 # 5. Log-Verzeichnis
@@ -35,9 +35,9 @@ mkdir -p "$INSTALL_DIR/logs"
 
 # 6. Telegram Bot als systemd Service
 echo "Creating systemd service..."
-sudo tee /etc/systemd/system/claudefolio-bot.service > /dev/null << SERVICE
+sudo tee /etc/systemd/system/velora-bot.service > /dev/null << SERVICE
 [Unit]
-Description=claudefolio Telegram Bot
+Description=Velora Telegram Bot
 After=network.target
 
 [Service]
@@ -53,14 +53,14 @@ WantedBy=multi-user.target
 SERVICE
 
 sudo systemctl daemon-reload
-sudo systemctl enable claudefolio-bot
-sudo systemctl start claudefolio-bot
+sudo systemctl enable velora-bot
+sudo systemctl start velora-bot
 
 # 7. Web Dashboard als systemd Service
 echo "Creating web dashboard service..."
-sudo tee /etc/systemd/system/claudefolio-web.service > /dev/null << SERVICE
+sudo tee /etc/systemd/system/velora-web.service > /dev/null << SERVICE
 [Unit]
-Description=claudefolio Web Dashboard
+Description=Velora Web Dashboard
 After=network.target
 
 [Service]
@@ -76,8 +76,8 @@ WantedBy=multi-user.target
 SERVICE
 
 sudo systemctl daemon-reload
-sudo systemctl enable claudefolio-web
-sudo systemctl start claudefolio-web
+sudo systemctl enable velora-web
+sudo systemctl start velora-web
 
 echo "=== Setup complete ==="
 echo ""

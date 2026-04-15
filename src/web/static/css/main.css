@@ -1,4 +1,4 @@
-/* claudefolio Dashboard — Dark Theme (v2) */
+/* Velora Dashboard — Dark Theme (v2) */
 
 :root {
     --bg-primary: #0f172a;
@@ -67,12 +67,14 @@ body {
     align-items: center;
     justify-content: center;
     color: white;
+    font-family: 'Space Mono', monospace;
     font-weight: 700;
     font-size: 14px;
     flex-shrink: 0;
 }
 
 .sidebar-title {
+    font-family: 'Space Mono', monospace;
     font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);

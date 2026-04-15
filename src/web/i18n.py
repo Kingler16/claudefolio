@@ -1,5 +1,5 @@
 """
-Internationalization for the claudefolio web dashboard.
+Internationalization for the Velora web dashboard.
 Supports: de (German), en (English).
 Usage: from src.web.i18n import get_translations; t = get_translations("de")
 """

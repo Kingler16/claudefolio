@@ -17,14 +17,13 @@
             --bg: #0a0e1a;
             --bg2: #0f172a;
             --bg3: #1e293b;
-            --border: #1e293b;
+            --border: rgba(255,255,255,0.06);
             --text: #f1f5f9;
             --text2: #94a3b8;
             --text3: #64748b;
             --accent: #3b82f6;
             --accent2: #60a5fa;
             --green: #4ade80;
-            --red: #f87171;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,6 +36,19 @@
             overflow-x: hidden;
         }
 
+        /* ─── Grain Overlay ─── */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px;
+        }
+
         /* ─── Nav ─── */
         nav {
             position: fixed;
@@ -44,9 +56,10 @@
             width: 100%;
             z-index: 100;
             padding: 16px 0;
-            background: rgba(10, 14, 26, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+            background: rgba(10, 14, 26, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
         }
 
         .nav-inner {
@@ -70,18 +83,14 @@
         }
 
         .nav-logo {
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Space Mono', monospace;
-            font-size: 13px;
-            font-weight: 800;
-            color: white;
         }
+
+        .nav-logo svg { width: 100%; height: 100%; }
 
         .nav-links {
             display: flex;
@@ -99,12 +108,12 @@
 
         .nav-links a:hover { color: var(--text); }
 
-        .btn-github {
+        .btn-nav {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: var(--bg3);
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text);
@@ -114,47 +123,64 @@
             transition: all 0.2s;
         }
 
-        .btn-github:hover { background: #273548; border-color: var(--text3); }
+        .btn-nav:hover { background: rgba(255,255,255,0.08); }
 
         /* ─── Hero ─── */
         .hero {
-            padding: 140px 24px 80px;
+            padding: 160px 24px 100px;
             text-align: center;
             position: relative;
+            overflow: hidden;
         }
 
+        /* Grainy gradient blobs */
         .hero::before {
             content: '';
             position: absolute;
-            top: 0;
+            top: -120px;
             left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+            transform: translateX(-60%);
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.03) 40%, transparent 70%);
+            filter: blur(60px);
             pointer-events: none;
         }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 60px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(74, 222, 128, 0.06) 0%, transparent 60%);
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .hero-content { position: relative; z-index: 1; }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 6px 16px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
             border-radius: 100px;
             font-size: 13px;
             font-weight: 500;
             color: var(--accent2);
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .hero h1 {
-            font-size: clamp(36px, 6vw, 64px);
+            font-size: clamp(38px, 6vw, 68px);
             font-weight: 800;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-            margin-bottom: 20px;
+            letter-spacing: -2px;
+            line-height: 1.05;
+            margin-bottom: 24px;
         }
 
         .hero h1 .gradient {
@@ -165,10 +191,10 @@
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 17px;
             color: var(--text2);
-            max-width: 600px;
-            margin: 0 auto 36px;
+            max-width: 560px;
+            margin: 0 auto 40px;
             line-height: 1.7;
         }
 
@@ -200,7 +226,7 @@
             align-items: center;
             gap: 8px;
             padding: 12px 28px;
-            background: transparent;
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--border);
             border-radius: 10px;
             color: var(--text);
@@ -210,26 +236,26 @@
             transition: all 0.2s;
         }
 
-        .btn-secondary:hover { background: var(--bg3); border-color: var(--text3); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.07); }
 
         .hero-stats {
             display: flex;
             gap: 48px;
             justify-content: center;
-            margin-top: 48px;
-            padding-top: 36px;
+            margin-top: 56px;
+            padding-top: 40px;
             border-top: 1px solid var(--border);
             max-width: 500px;
             margin-left: auto;
             margin-right: auto;
         }
 
-        .stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
-        .stat-label { font-size: 13px; color: var(--text3); margin-top: 2px; }
+        .stat-value { font-size: 28px; font-weight: 700; }
+        .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         /* ─── Screenshot ─── */
         .screenshot-section {
-            padding: 0 24px 80px;
+            padding: 0 24px 100px;
             max-width: 1100px;
             margin: 0 auto;
         }
@@ -238,9 +264,8 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             overflow: hidden;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.05);
+            box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
             background: var(--bg2);
-            position: relative;
         }
 
         .screenshot-bar {
@@ -248,26 +273,17 @@
             align-items: center;
             gap: 8px;
             padding: 12px 16px;
-            background: var(--bg3);
+            background: rgba(255,255,255,0.03);
             border-bottom: 1px solid var(--border);
         }
 
-        .screenshot-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
+        .screenshot-dot { width: 12px; height: 12px; border-radius: 50%; }
 
         .screenshot-url {
             flex: 1;
             text-align: center;
             font-size: 12px;
             color: var(--text3);
-        }
-
-        .screenshot-img {
-            width: 100%;
-            display: block;
         }
 
         .screenshot-placeholder {
@@ -279,9 +295,19 @@
 
         /* ─── Features ─── */
         .features {
-            padding: 80px 24px;
+            padding: 100px 24px;
             max-width: 1100px;
             margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent2);
+            text-align: center;
+            margin-bottom: 12px;
         }
 
         .section-title {
@@ -296,102 +322,100 @@
             font-size: 16px;
             color: var(--text2);
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 56px;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
         }
 
         .feature-card {
             background: var(--bg2);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 28px;
-            transition: all 0.2s;
+            padding: 32px;
+            transition: background 0.2s;
         }
 
-        .feature-card:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            transform: translateY(-2px);
-        }
+        .feature-card:hover { background: rgba(15, 23, 42, 0.8); }
 
         .feature-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             margin-bottom: 16px;
         }
 
         .feature-card h3 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             margin-bottom: 8px;
         }
 
         .feature-card p {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text2);
             line-height: 1.6;
         }
 
         /* ─── How It Works ─── */
         .how-it-works {
-            padding: 80px 24px;
+            padding: 100px 24px;
             max-width: 900px;
             margin: 0 auto;
         }
 
         .steps {
             display: grid;
-            gap: 24px;
-            margin-top: 48px;
+            gap: 2px;
+            margin-top: 56px;
+            background: var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
 
         .step {
             display: flex;
             gap: 20px;
             align-items: flex-start;
+            padding: 28px 32px;
+            background: var(--bg2);
         }
 
         .step-num {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             color: var(--accent2);
             flex-shrink: 0;
         }
 
-        .step-content h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-        .step-content p { font-size: 14px; color: var(--text2); }
+        .step-content h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .step-content p { font-size: 13px; color: var(--text2); }
 
         .step-code {
             margin-top: 8px;
-            padding: 10px 14px;
-            background: var(--bg2);
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.3);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            font-size: 13px;
+            border-radius: 6px;
+            font-family: 'Space Mono', 'SF Mono', monospace;
+            font-size: 12px;
             color: var(--accent2);
         }
 
         /* ─── Tech Stack ─── */
         .tech-stack {
-            padding: 80px 24px;
+            padding: 100px 24px;
             max-width: 1100px;
             margin: 0 auto;
         }
@@ -399,14 +423,14 @@
         .tech-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
             justify-content: center;
-            margin-top: 36px;
+            margin-top: 40px;
         }
 
         .tech-tag {
-            padding: 8px 18px;
-            background: var(--bg2);
+            padding: 6px 16px;
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
             border-radius: 100px;
             font-size: 13px;
@@ -416,17 +440,31 @@
 
         /* ─── CTA ─── */
         .cta {
-            padding: 80px 24px;
+            padding: 100px 24px;
             text-align: center;
+            position: relative;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 60%);
+            filter: blur(80px);
+            pointer-events: none;
         }
 
         .cta-box {
             max-width: 600px;
             margin: 0 auto;
-            padding: 48px;
-            background: var(--bg2);
+            padding: 56px 48px;
+            background: rgba(255,255,255,0.02);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 20px;
             position: relative;
             overflow: hidden;
         }
@@ -437,12 +475,12 @@
             top: -1px;
             left: 0;
             right: 0;
-            height: 2px;
+            height: 1px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
         }
 
         .cta h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
-        .cta p { font-size: 15px; color: var(--text2); margin-bottom: 24px; }
+        .cta p { font-size: 15px; color: var(--text2); margin-bottom: 28px; }
 
         /* ─── Footer ─── */
         footer {
@@ -466,6 +504,7 @@
         @media (max-width: 480px) {
             .hero h1 { font-size: 32px; }
             .hero-buttons { flex-direction: column; align-items: center; }
+            .step { flex-direction: column; gap: 12px; }
         }
     </style>
 </head>
@@ -475,17 +514,15 @@
 <nav>
     <div class="nav-inner">
         <a href="#" class="nav-brand">
-            <div class="nav-logo"><svg viewBox="0 0 2048 2048" width="18" height="18"><path fill="white" d="M1060.65 387.255C1079.49 384.884 1099.29 391.762 1115.36 401.178C1164.94 430.233 1216.59 457.924 1265.4 488.09C1128.47 522.642 991.312 556.243 853.921 588.89L739.867 616.139C681.6 630.09 600.871 643.244 569.468 700.558C558.508 720.695 556.049 744.376 562.636 766.336C578.002 818.634 631.59 843.91 675.245 869.344L766.3 922.377L935.873 1021.43C962.436 1036.91 992.197 1055.16 1018.95 1069.68C1008.69 1086.03 998.32 1102.3 987.852 1118.52C961.138 1160.14 934.891 1203.15 908.668 1245.17L623.657 950.858C595.904 922.028 568.004 893.34 539.956 864.797C509.948 834.195 466.636 794.967 450.944 755.46C432.356 708.662 516.958 674.126 548.493 657.633L624.562 617.409C723.507 564.579 822.833 512.467 922.532 461.075C953.969 444.694 985.265 428.045 1016.42 411.129C1031.43 402.934 1045.34 391.621 1060.65 387.255Z"/><path fill="white" d="M1139.12 802.501C1170.04 832.201 1204.82 869.699 1235.08 900.891L1396.09 1066.52L1499.71 1173.02C1533.51 1207.62 1580.41 1248.84 1598.71 1294.29C1610.05 1322.46 1571.66 1350.21 1550.36 1362.15C1516.16 1381.32 1480.05 1399.02 1445.12 1417.69L1179.63 1558.36L1041.93 1631.51C1026.95 1639.53 1006.11 1654.33 991.421 1658.42C960.508 1667.04 923.715 1642.67 897.345 1627.55L846.167 1597.92C824.204 1585.33 802.349 1572.55 780.603 1559.58C820.045 1548.46 865.995 1538.01 906.172 1527.91C968.104 1512.26 1030.13 1497.01 1092.26 1482.15C1178.34 1461.86 1264.49 1442 1350.59 1421.54C1398.09 1410.26 1450.71 1394.13 1477.91 1349.79C1490.24 1329.21 1493.85 1305.66 1487.64 1282.52C1473.19 1228.68 1425.7 1204.47 1381.03 1179.32L1308.61 1138.43C1215.93 1085.8 1123.53 1032.68 1031.43 979.054C1040.84 962.535 1052.45 944.548 1062.54 928.102C1088.35 886.408 1113.88 844.54 1139.12 802.501Z"/><path fill="white" d="M1283.68 505.006L1285.62 505.364C1291.1 510.854 1295.73 517.598 1300.51 523.721C1331.82 563.879 1348.13 613.572 1365.83 660.965L1410.1 778.769L1565.07 1194.12L1232.85 722.369C1223.11 708.857 1213.55 695.217 1204.18 681.452C1172.36 696.189 1139.03 713.891 1107.59 729.829L974.67 796.898C938.352 815.413 896.069 838.914 858.105 852.822C812.662 869.631 748.524 879.883 701.304 869.169C615.124 849.614 771.934 776.475 791.643 766.176L901.161 708.197L1283.68 505.006Z"/><path fill="white" d="M487.899 856.207C498.377 873.744 513.253 894.436 525.032 911.382C546.014 941.626 567.154 971.76 588.45 1001.78L760.42 1246.08C787.694 1284.74 818.822 1326.48 844.836 1365.47C901.859 1337.13 958.719 1308.47 1015.41 1279.48L1102.1 1235.87C1125.26 1224.19 1151.16 1209.7 1175.09 1200.45C1231.25 1178.74 1299.91 1164.8 1358.84 1181.01C1397.53 1191.78 1342.74 1233.7 1329.14 1241.33C1304.5 1256.21 1277.81 1269.38 1252.05 1282.8L1135.35 1344.41L765.243 1542.4C720.158 1490.17 709.551 1456.16 685.683 1393.19L630.423 1245.59C582.737 1117.63 531.863 987.107 486.54 858.415L487.899 856.207Z"/></svg></div>
+            <div class="nav-logo"><svg viewBox="0 0 2048 2048"><path fill="white" d="M1060.65 387.255C1079.49 384.884 1099.29 391.762 1115.36 401.178C1164.94 430.233 1216.59 457.924 1265.4 488.09C1128.47 522.642 991.312 556.243 853.921 588.89L739.867 616.139C681.6 630.09 600.871 643.244 569.468 700.558C558.508 720.695 556.049 744.376 562.636 766.336C578.002 818.634 631.59 843.91 675.245 869.344L766.3 922.377L935.873 1021.43C962.436 1036.91 992.197 1055.16 1018.95 1069.68C1008.69 1086.03 998.32 1102.3 987.852 1118.52C961.138 1160.14 934.891 1203.15 908.668 1245.17L623.657 950.858C595.904 922.028 568.004 893.34 539.956 864.797C509.948 834.195 466.636 794.967 450.944 755.46C432.356 708.662 516.958 674.126 548.493 657.633L624.562 617.409C723.507 564.579 822.833 512.467 922.532 461.075C953.969 444.694 985.265 428.045 1016.42 411.129C1031.43 402.934 1045.34 391.621 1060.65 387.255Z"/><path fill="white" d="M1139.12 802.501C1170.04 832.201 1204.82 869.699 1235.08 900.891L1396.09 1066.52L1499.71 1173.02C1533.51 1207.62 1580.41 1248.84 1598.71 1294.29C1610.05 1322.46 1571.66 1350.21 1550.36 1362.15C1516.16 1381.32 1480.05 1399.02 1445.12 1417.69L1179.63 1558.36L1041.93 1631.51C1026.95 1639.53 1006.11 1654.33 991.421 1658.42C960.508 1667.04 923.715 1642.67 897.345 1627.55L846.167 1597.92C824.204 1585.33 802.349 1572.55 780.603 1559.58C820.045 1548.46 865.995 1538.01 906.172 1527.91C968.104 1512.26 1030.13 1497.01 1092.26 1482.15C1178.34 1461.86 1264.49 1442 1350.59 1421.54C1398.09 1410.26 1450.71 1394.13 1477.91 1349.79C1490.24 1329.21 1493.85 1305.66 1487.64 1282.52C1473.19 1228.68 1425.7 1204.47 1381.03 1179.32L1308.61 1138.43C1215.93 1085.8 1123.53 1032.68 1031.43 979.054C1040.84 962.535 1052.45 944.548 1062.54 928.102C1088.35 886.408 1113.88 844.54 1139.12 802.501Z"/><path fill="white" d="M1283.68 505.006L1285.62 505.364C1291.1 510.854 1295.73 517.598 1300.51 523.721C1331.82 563.879 1348.13 613.572 1365.83 660.965L1410.1 778.769L1565.07 1194.12L1232.85 722.369C1223.11 708.857 1213.55 695.217 1204.18 681.452C1172.36 696.189 1139.03 713.891 1107.59 729.829L974.67 796.898C938.352 815.413 896.069 838.914 858.105 852.822C812.662 869.631 748.524 879.883 701.304 869.169C615.124 849.614 771.934 776.475 791.643 766.176L901.161 708.197L1283.68 505.006Z"/><path fill="white" d="M487.899 856.207C498.377 873.744 513.253 894.436 525.032 911.382C546.014 941.626 567.154 971.76 588.45 1001.78L760.42 1246.08C787.694 1284.74 818.822 1326.48 844.836 1365.47C901.859 1337.13 958.719 1308.47 1015.41 1279.48L1102.1 1235.87C1125.26 1224.19 1151.16 1209.7 1175.09 1200.45C1231.25 1178.74 1299.91 1164.8 1358.84 1181.01C1397.53 1191.78 1342.74 1233.7 1329.14 1241.33C1304.5 1256.21 1277.81 1269.38 1252.05 1282.8L1135.35 1344.41L765.243 1542.4C720.158 1490.17 709.551 1456.16 685.683 1393.19L630.423 1245.59C582.737 1117.63 531.863 987.107 486.54 858.415L487.899 856.207Z"/></svg></div>
             Velora
         </a>
         <div class="nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">Setup</a>
-            <a href="https://github.com/Kingler16/velora/wiki">Docs</a>
-            <a href="https://buymeacoffee.com/kingler16" class="btn-github" style="background: #facc15; border-color: #facc15; color: #0a0e1a;">
-                &#9749; Support
-            </a>
-            <a href="https://github.com/Kingler16/velora" class="btn-github">
+            <a href="https://github.com/Kingler16/Velora/wiki">Docs</a>
+            <a href="https://buymeacoffee.com/kingler16" class="btn-nav" style="color: #facc15;">&#9749; Support</a>
+            <a href="https://github.com/Kingler16/Velora" class="btn-nav">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 GitHub
             </a>
@@ -495,28 +532,30 @@
 
 <!-- Hero -->
 <section class="hero">
-    <div class="hero-badge">Open Source &middot; Self-Hosted &middot; Zero API Costs</div>
-    <h1>Your AI-Powered<br><span class="gradient">Wealth Advisor</span></h1>
-    <p>Automated portfolio monitoring, market analysis, and investment briefings. Web dashboard + Telegram bot, powered by Claude — runs on a Raspberry Pi.</p>
-    <div class="hero-buttons">
-        <a href="https://github.com/Kingler16/velora" class="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            View on GitHub
-        </a>
-        <a href="https://github.com/Kingler16/velora/wiki/Getting-Started" class="btn-secondary">Get Started</a>
-    </div>
-    <div class="hero-stats">
-        <div>
-            <div class="stat-value">7</div>
-            <div class="stat-label">Dashboard Pages</div>
+    <div class="hero-content">
+        <div class="hero-badge">Open Source &middot; Self-Hosted &middot; Zero API Costs</div>
+        <h1>Your AI-Powered<br><span class="gradient">Wealth Advisor</span></h1>
+        <p>Portfolio monitoring, market analysis, and investment briefings — powered by Claude. Web dashboard + Telegram bot, runs on a Raspberry Pi.</p>
+        <div class="hero-buttons">
+            <a href="https://github.com/Kingler16/Velora" class="btn-primary">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                View on GitHub
+            </a>
+            <a href="https://github.com/Kingler16/Velora/wiki/Getting-Started" class="btn-secondary">Get Started</a>
         </div>
-        <div>
-            <div class="stat-value">6</div>
-            <div class="stat-label">Data Sources</div>
-        </div>
-        <div>
-            <div class="stat-value">~90MB</div>
-            <div class="stat-label">RAM Usage</div>
+        <div class="hero-stats">
+            <div>
+                <div class="stat-value">7</div>
+                <div class="stat-label">Dashboard Pages</div>
+            </div>
+            <div>
+                <div class="stat-value">6</div>
+                <div class="stat-label">Data Sources</div>
+            </div>
+            <div>
+                <div class="stat-value">~90MB</div>
+                <div class="stat-label">RAM Usage</div>
+            </div>
         </div>
     </div>
 </section>
@@ -531,7 +570,7 @@
             <div class="screenshot-url">localhost:8080</div>
         </div>
         <div class="screenshot-placeholder">
-            <p style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;">&#128200;</p>
+            <p style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;">&#128200;</p>
             <p>Dashboard screenshot coming soon</p>
             <p style="font-size: 13px; margin-top: 8px;">Dark-themed portfolio overview with KPI cards, allocation chart, and holdings table</p>
         </div>
@@ -540,45 +579,47 @@
 
 <!-- Features -->
 <section class="features" id="features">
+    <p class="section-label">Features</p>
     <h2 class="section-title">Everything You Need</h2>
     <p class="section-sub">Portfolio tracking, AI analysis, and market data — in one self-hosted package.</p>
 
     <div class="features-grid">
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(59,130,246,0.1); color:#60a5fa;">&#128202;</div>
+            <div class="feature-icon">&#128202;</div>
             <h3>Web Dashboard</h3>
-            <p>7 pages with charts, tables, and KPIs. Portfolio allocation, benchmark comparison, tax-loss harvesting, Fear & Greed gauge. Dark theme, responsive.</p>
+            <p>7 pages with charts, tables, and KPIs. Portfolio allocation, benchmark comparison, tax-loss harvesting, Fear & Greed gauge.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(74,222,128,0.1); color:#4ade80;">&#128172;</div>
+            <div class="feature-icon">&#128172;</div>
             <h3>Telegram Bot</h3>
-            <p>Receive briefings, log trades in natural language, analyze any ticker, and chat with your AI advisor — all from Telegram.</p>
+            <p>Receive briefings, log trades in natural language, analyze any ticker, and chat with your AI advisor.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(248,113,113,0.1); color:#f87171;">&#129504;</div>
+            <div class="feature-icon">&#129504;</div>
             <h3>AI Briefings</h3>
-            <p>Bi-weekly portfolio analysis powered by Claude Opus. Market regime, position-specific insights, actionable recommendations with entry/target/stop.</p>
+            <p>Bi-weekly portfolio analysis powered by Claude Opus. Market regime, position insights, actionable recommendations.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(250,204,21,0.1); color:#facc15;">&#128176;</div>
+            <div class="feature-icon">&#128176;</div>
             <h3>Tax Optimization</h3>
-            <p>Automatic tax-loss harvesting analysis. Identifies positions to sell for tax savings, calculates potential savings for your tax regime.</p>
+            <p>Automatic tax-loss harvesting analysis. Identifies positions to sell for tax savings in your tax regime.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(139,92,246,0.1); color:#a78bfa;">&#128203;</div>
+            <div class="feature-icon">&#128203;</div>
             <h3>Recommendation Tracking</h3>
-            <p>AI recommendations tracked with BUY/SELL/WATCH status. Automatic outcome detection, hit-rate stats. Trades auto-close matching recommendations.</p>
+            <p>BUY/SELL/WATCH tracking, automatic outcome detection, hit-rate stats. Trades auto-close matching recommendations.</p>
         </div>
         <div class="feature-card">
-            <div class="feature-icon" style="background:rgba(6,182,212,0.1); color:#22d3ee;">&#127760;</div>
+            <div class="feature-icon">&#127760;</div>
             <h3>6 Data Sources</h3>
-            <p>yfinance, FRED, ECB, Brave Search, Bloomberg RSS, Finnhub. Prices, fundamentals, macro data, news, sentiment — all aggregated automatically.</p>
+            <p>yfinance, FRED, ECB, Brave Search, Bloomberg RSS, Finnhub. Prices, fundamentals, macro, news, sentiment.</p>
         </div>
     </div>
 </section>
 
 <!-- How It Works -->
 <section class="how-it-works" id="how-it-works">
+    <p class="section-label">Setup</p>
     <h2 class="section-title">Up and Running in 5 Minutes</h2>
     <p class="section-sub">No Docker, no cloud, no complexity.</p>
 
@@ -588,7 +629,7 @@
             <div class="step-content">
                 <h3>Clone & Setup</h3>
                 <p>The interactive wizard handles everything — language, tax regime, Telegram bot, API keys, portfolio import.</p>
-                <div class="step-code">git clone https://github.com/Kingler16/velora.git && cd velora && python3 setup.py</div>
+                <div class="step-code">git clone https://github.com/Kingler16/Velora.git && cd Velora && python3 setup.py</div>
             </div>
         </div>
         <div class="step">
@@ -604,7 +645,7 @@
             <div class="step-content">
                 <h3>Start the Dashboard</h3>
                 <p>Open the web dashboard and explore your portfolio visually.</p>
-                <div class="step-code">python -m src.main web &nbsp; # &rarr; http://localhost:8080</div>
+                <div class="step-code">python -m src.main web</div>
             </div>
         </div>
         <div class="step">
@@ -620,6 +661,7 @@
 
 <!-- Tech Stack -->
 <section class="tech-stack">
+    <p class="section-label">Tech Stack</p>
     <h2 class="section-title">Built With</h2>
     <div class="tech-grid">
         <span class="tech-tag">Python</span>
@@ -643,20 +685,18 @@
         <h2>Ready to Try?</h2>
         <p>Velora is free, open source, and runs on your hardware. Your data stays yours.</p>
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-            <a href="https://github.com/Kingler16/velora" class="btn-primary">
+            <a href="https://github.com/Kingler16/Velora" class="btn-primary">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
                 Get Started on GitHub
             </a>
-            <a href="https://buymeacoffee.com/kingler16" class="btn-secondary" style="border-color: #facc15; color: #facc15;">
-                &#9749; Buy Me a Coffee
-            </a>
+            <a href="https://buymeacoffee.com/kingler16" class="btn-secondary" style="color: #facc15;">&#9749; Buy Me a Coffee</a>
         </div>
     </div>
 </section>
 
 <!-- Footer -->
 <footer>
-    <p>Velora &middot; MIT License &middot; <a href="https://github.com/Kingler16/velora">GitHub</a> &middot; <a href="https://github.com/Kingler16/velora/wiki">Docs</a> &middot; <a href="https://buymeacoffee.com/kingler16" style="color: #facc15;">&#9749; Support</a></p>
+    <p>Velora &middot; MIT License &middot; <a href="https://github.com/Kingler16/Velora">GitHub</a> &middot; <a href="https://github.com/Kingler16/Velora/wiki">Docs</a> &middot; <a href="https://buymeacoffee.com/kingler16" style="color: #facc15;">&#9749; Support</a></p>
 </footer>
 
 </body>

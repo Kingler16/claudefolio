@@ -1,0 +1,35 @@
+{% if page != 'chat' %}
+<button id="velora-widget-toggle" class="velora-widget-toggle" title="Velora Chat (⌘/)" aria-label="Chat öffnen">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+</button>
+
+<aside id="velora-widget-panel" class="velora-widget-panel" aria-hidden="true">
+    <header class="velora-widget-header">
+        <div class="velora-widget-title">
+            <span class="velora-widget-logo">●</span>
+            <span>Velora</span>
+        </div>
+        <div class="velora-widget-actions">
+            <a href="/chat" class="velora-widget-btn" title="Voll öffnen">↗</a>
+            <button class="velora-widget-btn" id="velora-widget-new" title="Neuer Chat">+</button>
+            <button class="velora-widget-btn" id="velora-widget-close" title="Schließen">×</button>
+        </div>
+    </header>
+    <div id="velora-widget-messages" class="velora-widget-messages"></div>
+    <div class="velora-widget-input-wrap">
+        <textarea id="velora-widget-input" class="velora-widget-input" rows="1" placeholder="Frag Velora…"></textarea>
+        <button id="velora-widget-send" class="velora-widget-send" disabled title="Senden">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </div>
+</aside>
+
+<link rel="stylesheet" href="/static/css/chat_widget.css">
+<script src="/static/vendor/marked.min.js" defer></script>
+<script src="/static/js/chat_widget.js" defer></script>
+{% endif %}

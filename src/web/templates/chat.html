@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Chat — Velora{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/chat.css">
+<script src="/static/vendor/marked.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="chat-layout" data-page="chat">
+
+    <aside class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <button id="chat-new" class="btn-new" title="Neuer Chat (⌘K)">+ Neuer Chat</button>
+        </div>
+        <input id="chat-search" class="chat-sidebar-search" type="search" placeholder="Chats durchsuchen…" />
+        <div id="chat-thread-list" class="chat-thread-list"></div>
+    </aside>
+
+    <main class="chat-main">
+        <div class="chat-header">
+            <div id="chat-header-title" class="chat-header-title">Velora</div>
+            <div class="chat-header-actions">
+                <button id="chat-pin-toggle" class="chat-header-btn" title="Chat anheften">☆ Anheften</button>
+                <button id="chat-delete-btn" class="chat-header-btn" title="Chat löschen">🗑 Löschen</button>
+            </div>
+        </div>
+
+        <div id="chat-messages" class="chat-messages">
+            <!-- Messages werden via JS gerendert -->
+        </div>
+
+        <div class="chat-input-wrap">
+            <div class="chat-input-inner">
+                <textarea id="chat-input" class="chat-input" rows="1"
+                    placeholder="Frag Velora etwas… (Enter zum Senden, Shift+Enter für Zeilenumbruch)"></textarea>
+                <button id="chat-send" class="chat-send-btn" disabled title="Senden">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-input-footer">
+                <span>Velora nutzt deine Portfolio-, Markt- und Briefing-Daten als Kontext.</span>
+                <span>Opus · high effort</span>
+            </div>
+        </div>
+    </main>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/chat.js" defer></script>
+{% endblock %}

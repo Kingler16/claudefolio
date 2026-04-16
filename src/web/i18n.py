@@ -15,6 +15,7 @@ _TRANSLATIONS: dict[str, dict] = {
             "markt": "Markt",
             "briefings": "Briefings",
             "empfehlungen": "Empfehlungen",
+            "chat": "Chat",
             "settings": "Einstellungen",
         },
         "dashboard": {
@@ -179,6 +180,7 @@ _TRANSLATIONS: dict[str, dict] = {
             "markt": "Market",
             "briefings": "Briefings",
             "empfehlungen": "Recommendations",
+            "chat": "Chat",
             "settings": "Settings",
         },
         "dashboard": {

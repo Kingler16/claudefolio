@@ -71,6 +71,9 @@ def format_number(value, decimals=2):
 async def lifespan(app: FastAPI):
     logger.info("Velora Dashboard gestartet")
     from src.data.cache import get_cache_age_minutes
+    from src.chat.db import init_db as init_chat_db
+    init_chat_db()
+    logger.info("Chat-DB initialisiert")
     age = get_cache_age_minutes("market_data")
     if age is None:
         logger.info("Kein Cache vorhanden — starte automatischen Daten-Refresh...")
@@ -90,6 +93,10 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates.env.filters["eur"] = format_eur
 templates.env.filters["pct"] = format_pct
 templates.env.filters["number"] = format_number
+
+# Chat-Router
+from src.chat.routes import router as chat_router
+app.include_router(chat_router)
 
 
 def _load_settings() -> dict:
@@ -214,6 +221,11 @@ async def settings_page(request: Request):
     return templates.TemplateResponse(request, "settings.html", _ctx(request, "settings",
         settings=settings, accounts=list(portfolio.get("accounts", {}).keys()), portfolio=portfolio,
     ))
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_page(request: Request):
+    return templates.TemplateResponse(request, "chat.html", _ctx(request, "chat"))
 
 
 # ─── HTMX Partials ───────────────────────────────────────────

@@ -43,6 +43,11 @@
             </a>
         </li>
         <li style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 8px;">
+            <a href="/chat" class="{{ 'active' if page == 'chat' }}">
+                <span class="nav-icon">&#9679;</span> {{ t.nav.get('chat', 'Chat') }}
+            </a>
+        </li>
+        <li>
             <a href="/settings" class="{{ 'active' if page == 'settings' }}">
                 <span class="nav-icon">&#9881;</span> {{ t.nav.get('settings', 'Einstellungen') }}
             </a>

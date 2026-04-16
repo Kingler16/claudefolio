@@ -1,0 +1,238 @@
+/* Velora Chat Widget — Floating Overlay */
+
+.velora-widget-toggle {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    z-index: 999;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.velora-widget-toggle:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.55);
+}
+.velora-widget-toggle.active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    border: 1px solid var(--border);
+}
+
+.velora-widget-panel {
+    position: fixed;
+    right: 22px;
+    bottom: 88px;
+    width: 420px;
+    height: min(640px, calc(100vh - 120px));
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+    transform-origin: bottom right;
+}
+.velora-widget-panel.open {
+    display: flex;
+    animation: widget-pop 0.2s ease-out;
+}
+@keyframes widget-pop {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.velora-widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.velora-widget-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 14px;
+    letter-spacing: -0.3px;
+}
+.velora-widget-logo {
+    color: var(--accent);
+    font-size: 14px;
+}
+
+.velora-widget-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.velora-widget-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    line-height: 1;
+    transition: all 0.12s;
+}
+.velora-widget-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+.velora-widget-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg-primary);
+}
+
+.velora-widget-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+    padding: 24px 12px;
+    margin: auto;
+}
+.velora-widget-empty strong { color: var(--text-primary); }
+
+.velora-widget-msg {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.velora-widget-msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: white;
+    border-top-right-radius: 3px;
+}
+.velora-widget-msg.assistant {
+    align-self: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-top-left-radius: 3px;
+}
+.velora-widget-msg > *:first-child { margin-top: 0; }
+.velora-widget-msg > *:last-child { margin-bottom: 0; }
+.velora-widget-msg p { margin: 0 0 6px; }
+.velora-widget-msg p:last-child { margin-bottom: 0; }
+.velora-widget-msg ul, .velora-widget-msg ol { margin: 4px 0; padding-left: 20px; }
+.velora-widget-msg code {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+}
+.velora-widget-msg.user code { background: rgba(255,255,255,0.2); }
+.velora-widget-msg pre {
+    background: var(--bg-primary);
+    padding: 8px;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 6px 0;
+    font-size: 11px;
+}
+
+.velora-widget-tool {
+    align-self: flex-start;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border-left: 2px solid var(--accent);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+}
+.velora-widget-tool.done { border-left-color: var(--green); }
+
+.velora-widget-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background: var(--text-primary);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s infinite;
+}
+
+.velora-widget-input-wrap {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    align-items: flex-end;
+}
+
+.velora-widget-input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.4;
+    resize: none;
+    outline: none;
+    max-height: 140px;
+    font-family: inherit;
+}
+.velora-widget-input:focus { border-color: var(--accent); }
+
+.velora-widget-send {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: filter 0.15s;
+}
+.velora-widget-send:hover:not(:disabled) { filter: brightness(1.15); }
+.velora-widget-send:disabled { background: var(--border); cursor: not-allowed; color: var(--text-muted); }
+
+@media (max-width: 640px) {
+    .velora-widget-panel {
+        width: calc(100vw - 24px);
+        right: 12px;
+        bottom: 80px;
+        height: min(70vh, 520px);
+    }
+    .velora-widget-toggle { right: 14px; bottom: 14px; }
+}

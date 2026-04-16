@@ -12,7 +12,7 @@
     <script src="/static/vendor/htmx.min.js"></script>
     {% block head %}{% endblock %}
 </head>
-<body>
+<body data-page="{{ page }}">
     <div class="app-layout">
         {% include "components/nav.html" %}
 
@@ -21,7 +21,14 @@
         </main>
     </div>
 
+    {% include "components/chat_widget.html" %}
+
     {% block scripts %}{% endblock %}
-    <script>setTimeout(()=>location.reload(), 15*60*1000);</script>
+    <script>
+      // Auto-Reload alle 15 Min — außer auf der Chat-Seite (Konversation nicht killen).
+      if (!document.querySelector('.chat-layout')) {
+        setTimeout(()=>location.reload(), 15*60*1000);
+      }
+    </script>
 </body>
 </html>

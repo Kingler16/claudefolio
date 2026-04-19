@@ -113,7 +113,7 @@
             </div>
         </div>
         {% for pos in account_data.positions %}
-        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--glass-border);">
             <div>
                 <div style="font-size: 13px; font-weight: 500;">{{ pos.name }}</div>
                 <div style="font-size: 11px; color: var(--text-muted);">
@@ -226,7 +226,7 @@
 <script>
 const regionExposure = {{ overview.region_exposure|tojson }};
 const sectorBreakdown = {{ overview.sector_breakdown|tojson }};
-const pieColors = ['#3b82f6','#22c55e','#ef4444','#eab308','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#a855f7','#64748b'];
+const pieColors = window.VeloraChartTheme.colors;
 
 // Region Chart
 new Chart(document.getElementById('regionChart'), {
@@ -236,7 +236,7 @@ new Chart(document.getElementById('regionChart'), {
         datasets: [{
             data: Object.values(regionExposure),
             backgroundColor: pieColors.slice(0, Object.keys(regionExposure).length),
-            borderColor: '#0f172a',
+            borderColor: VeloraChartTheme.bodyBg(),
             borderWidth: 2,
         }]
     },
@@ -245,13 +245,13 @@ new Chart(document.getElementById('regionChart'), {
         maintainAspectRatio: false,
         cutout: '60%',
         plugins: {
-            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } }
+            legend: { position: 'bottom', labels: { color: VeloraChartTheme.text(), font: { size: 12 } } }
         }
     }
 });
 
 // Sector Chart
-const sectorColors = ['#3b82f6','#22c55e','#ef4444','#eab308','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#a855f7','#64748b'];
+const sectorColors = window.VeloraChartTheme.colors;
 new Chart(document.getElementById('sectorChart'), {
     type: 'doughnut',
     data: {
@@ -259,7 +259,7 @@ new Chart(document.getElementById('sectorChart'), {
         datasets: [{
             data: Object.values(sectorBreakdown),
             backgroundColor: sectorColors.slice(0, Object.keys(sectorBreakdown).length),
-            borderColor: '#0f172a',
+            borderColor: VeloraChartTheme.bodyBg(),
             borderWidth: 2,
         }]
     },
@@ -268,7 +268,7 @@ new Chart(document.getElementById('sectorChart'), {
         maintainAspectRatio: false,
         cutout: '60%',
         plugins: {
-            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 6 } }
+            legend: { position: 'bottom', labels: { color: VeloraChartTheme.text(), font: { size: 11 }, padding: 6 } }
         }
     }
 });

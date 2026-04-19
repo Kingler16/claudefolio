@@ -1,0 +1,62 @@
+/* Velora background system: grainy blurred gradient blobs + SVG noise overlay. */
+
+body {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20vh -20vw;
+  z-index: -2;
+  background:
+    radial-gradient(42vmin circle at 12% 18%, rgba(6, 182, 212, 0.55), transparent 62%),
+    radial-gradient(48vmin circle at 82% 28%, rgba(16, 185, 129, 0.42), transparent 65%),
+    radial-gradient(52vmin circle at 70% 85%, rgba(59, 130, 246, 0.38), transparent 60%),
+    radial-gradient(36vmin circle at 20% 78%, rgba(34, 211, 238, 0.35), transparent 58%);
+  filter: blur(60px) saturate(140%);
+  animation: blob-drift 48s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--glass-noise-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 220px 220px;
+}
+
+@keyframes blob-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-3vw, 2vh, 0) rotate(4deg);
+  }
+  100% {
+    transform: translate3d(2vw, -2vh, 0) rotate(-3deg);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body::before {
+    background:
+      radial-gradient(42vmin circle at 12% 18%, rgba(255, 180, 130, 0.38), transparent 62%),
+      radial-gradient(48vmin circle at 82% 28%, rgba(160, 200, 255, 0.35), transparent 65%),
+      radial-gradient(52vmin circle at 70% 85%, rgba(180, 230, 210, 0.32), transparent 60%),
+      radial-gradient(36vmin circle at 20% 78%, rgba(210, 190, 255, 0.28), transparent 58%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}

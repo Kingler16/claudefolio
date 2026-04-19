@@ -177,7 +177,7 @@
         <div class="card-title">Top Performer</div>
         {% set sorted_pos = overview.positions|sort(attribute='pnl_pct', reverse=true) %}
         {% for pos in sorted_pos[:5] %}
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
             <div>
                 <span style="font-weight: 500;">{{ pos.name }}</span>
                 <span class="ticker-badge" style="margin-left: 6px;">{{ pos.ticker }}</span>
@@ -190,7 +190,7 @@
         <div class="card-title">Schlechteste Performer</div>
         {% set sorted_neg = overview.positions|sort(attribute='pnl_pct') %}
         {% for pos in sorted_neg[:5] %}
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
             <div>
                 <span style="font-weight: 500;">{{ pos.name }}</span>
                 <span class="ticker-badge" style="margin-left: 6px;">{{ pos.ticker }}</span>
@@ -210,16 +210,16 @@ const accountBreakdown = {{ overview.account_breakdown|tojson }};
 const snapshots = {{ snapshots|tojson }};
 const benchmarks = {{ benchmarks|tojson }};
 
-const pieColors = ['#3b82f6','#22c55e','#ef4444','#eab308','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#a855f7','#64748b'];
+const pieColors = window.VeloraChartTheme.colors;
 const pieOpts = {
     responsive: true, maintainAspectRatio: false, cutout: '55%',
-    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 }, padding: 4 } } }
+    plugins: { legend: { position: 'bottom', labels: { color: VeloraChartTheme.text(), font: { size: 10 }, padding: 4 } } }
 };
 
 function makePie(id, labels, data) {
     new Chart(document.getElementById(id), {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: pieColors.slice(0, labels.length), borderColor: '#0f172a', borderWidth: 2 }] },
+        data: { labels, datasets: [{ data, backgroundColor: pieColors.slice(0, labels.length), borderColor: VeloraChartTheme.bodyBg(), borderWidth: 2 }] },
         options: pieOpts
     });
 }
@@ -233,11 +233,8 @@ const benchCtx = document.getElementById('benchmarkChart');
 if (benchCtx && benchmarks.length > 0) {
     const bmLabels = benchmarks.map(b => b.name);
     const bmValues = benchmarks.map(b => b.change_pct);
-    const indexColors = {
-        'S&P 500': '#3b82f6', 'NASDAQ': '#8b5cf6', 'DAX': '#facc15',
-        'ATX': '#ef4444', 'Euro Stoxx 50': '#06b6d4', 'Gold': '#f59e0b', 'BTC/USD': '#f97316'
-    };
-    const bmColors = benchmarks.map(b => indexColors[b.name] || '#64748b');
+    const bmPalette = window.VeloraChartTheme.colors;
+    const bmColors = benchmarks.map((b, i) => bmPalette[i % bmPalette.length]);
 
     new Chart(benchCtx, {
         type: 'bar',
@@ -256,11 +253,11 @@ if (benchCtx && benchmarks.length > 0) {
             indexAxis: 'y',
             scales: {
                 x: {
-                    ticks: { color: '#64748b', callback: v => v + '%' },
-                    grid: { color: 'rgba(51,65,85,0.3)' },
+                    ticks: { color: VeloraChartTheme.textMuted(), callback: v => v + '%' },
+                    grid: { color: VeloraChartTheme.grid() },
                 },
                 y: {
-                    ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } },
+                    ticks: { color: VeloraChartTheme.text(), font: { size: 13, weight: '600' } },
                     grid: { display: false },
                 }
             },
@@ -301,17 +298,17 @@ if (snapshots.length > 0) {
                 if (val !== null) {
                     const intensity = Math.min(Math.abs(val) / 5, 1);
                     const color = val >= 0
-                        ? `rgba(34, 197, 94, ${0.1 + intensity * 0.6})`
-                        : `rgba(239, 68, 68, ${0.1 + intensity * 0.6})`;
+                        ? `rgba(16, 185, 129, ${0.1 + intensity * 0.6})`
+                        : `rgba(248, 113, 113, ${0.1 + intensity * 0.6})`;
                     td.style.background = color;
                     td.style.borderRadius = '4px';
                     td.style.fontWeight = '600';
                     td.style.fontSize = '12px';
-                    td.style.color = val >= 0 ? '#22c55e' : '#ef4444';
+                    td.style.color = val >= 0 ? VeloraChartTheme.green() : VeloraChartTheme.red();
                     td.textContent = (val >= 0 ? '+' : '') + val.toFixed(1) + '%';
                 } else {
                     td.textContent = '–';
-                    td.style.color = '#64748b';
+                    td.style.color = VeloraChartTheme.textMuted();
                 }
                 tr.appendChild(td);
             });
@@ -330,16 +327,16 @@ if (perfCtx && snapshots.length > 0) {
             datasets: [{
                 label: 'Vermögen (EUR)',
                 data: snapshots.map(s => s.total_value || s.portfolio_value || 0),
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59,130,246,0.1)',
+                borderColor: VeloraChartTheme.accent(),
+                backgroundColor: 'rgba(34,211,238,0.12)',
                 fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2
             }]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             scales: {
-                x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(51,65,85,0.3)' } },
-                y: { ticks: { color: '#64748b', callback: v => v.toLocaleString('de-DE') + '€' }, grid: { color: 'rgba(51,65,85,0.3)' } }
+                x: { ticks: { color: VeloraChartTheme.textMuted() }, grid: { color: VeloraChartTheme.grid() } },
+                y: { ticks: { color: VeloraChartTheme.textMuted(), callback: v => v.toLocaleString('de-DE') + '€' }, grid: { color: VeloraChartTheme.grid() } }
             },
             plugins: { legend: { display: false } }
         }

@@ -1,0 +1,164 @@
+/* Velora design system: raw tokens, semantic aliases, legacy compat, base resets. */
+
+:root {
+  --color-night-0: #030510;
+  --color-night-1: #050814;
+  --color-night-2: #0a0f1f;
+  --color-night-3: #0f1428;
+
+  --color-cyan-400: #22d3ee;
+  --color-cyan-500: #06b6d4;
+  --color-cyan-600: #0891b2;
+  --color-emerald-500: #10b981;
+  --color-azure-500: #3b82f6;
+  --color-mint-400: #34d399;
+
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-amber-400: #fbbf24;
+
+  --color-ink-0: #f0f9ff;
+  --color-ink-1: #e0f2fe;
+  --color-ink-2: #94a3b8;
+  --color-ink-3: #64748b;
+
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg-strong: rgba(255, 255, 255, 0.085);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-highlight: rgba(255, 255, 255, 0.10);
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+  --glass-noise-opacity: 0.035;
+
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.38), inset 0 1px 0 var(--glass-highlight);
+  --shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--glass-highlight);
+  --shadow-accent-glow: 0 0 24px rgba(34, 211, 238, 0.25);
+
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+
+  --bg-body: var(--color-night-1);
+  --bg-canvas: var(--color-night-0);
+  --text-primary: var(--color-ink-0);
+  --text-secondary: var(--color-ink-2);
+  --text-muted: var(--color-ink-3);
+
+  --accent: var(--color-cyan-400);
+  --accent-deep: var(--color-cyan-600);
+  --accent-bg: rgba(34, 211, 238, 0.12);
+  --accent-ring: rgba(34, 211, 238, 0.45);
+
+  --green: var(--color-emerald-500);
+  --green-bg: rgba(16, 185, 129, 0.14);
+  --red: var(--color-red-400);
+  --red-bg: rgba(248, 113, 113, 0.14);
+  --yellow: var(--color-amber-400);
+  --yellow-bg: rgba(251, 191, 36, 0.14);
+
+  /* Legacy aliases: chat.js + chat_widget.js still read these names inline. */
+  --bg-primary: var(--bg-body);
+  --bg-secondary: var(--glass-bg);
+  --bg-card: var(--glass-bg);
+  --bg-hover: var(--glass-bg-strong);
+  --border: var(--glass-border);
+  --accent-light: var(--accent);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-body: #eef3fb;
+    --bg-canvas: #f5f8fd;
+    --text-primary: #0b1022;
+    --text-secondary: #3c4963;
+    --text-muted: #6a7793;
+
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-bg-strong: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(10, 20, 40, 0.08);
+    --glass-border-strong: rgba(10, 20, 40, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.8);
+    --glass-noise-opacity: 0.05;
+
+    --accent: #0891b2;
+    --accent-deep: #0e7490;
+    --accent-bg: rgba(8, 145, 178, 0.10);
+    --accent-ring: rgba(8, 145, 178, 0.35);
+
+    --green: #059669;
+    --green-bg: rgba(5, 150, 105, 0.12);
+    --red: #dc2626;
+    --red-bg: rgba(220, 38, 38, 0.12);
+    --yellow: #d97706;
+    --yellow-bg: rgba(217, 119, 6, 0.12);
+
+    --shadow-glass: 0 8px 32px rgba(10, 20, 40, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --shadow-elevated: 0 16px 48px rgba(10, 20, 40, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    --shadow-accent-glow: 0 0 24px rgba(8, 145, 178, 0.30);
+  }
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--bg-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--accent-bg);
+  color: var(--text-primary);
+}
+
+img {
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}

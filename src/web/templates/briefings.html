@@ -26,7 +26,7 @@
         <div class="card-title">Key Insights</div>
         {% if notes.get('key_insights') %}
             {% for insight in notes['key_insights'][-5:]|reverse %}
-            <div style="display: flex; gap: 10px; padding: 10px 0; {% if not loop.last %}border-bottom: 1px solid rgba(51,65,85,0.3);{% endif %}">
+            <div style="display: flex; gap: 10px; padding: 10px 0; {% if not loop.last %}border-bottom: 1px solid var(--glass-border);{% endif %}">
                 <span style="color: var(--accent); font-size: 16px; flex-shrink: 0;">&#8250;</span>
                 <span style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">{{ insight }}</span>
             </div>

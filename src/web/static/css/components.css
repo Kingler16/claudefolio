@@ -1,0 +1,240 @@
+/* Velora UI atoms: glass primitives, buttons, inputs, badges, utilities. */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--radius-md);
+  position: relative;
+  isolation: isolate;
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+}
+
+.glass-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+.glass-accent-ring {
+  box-shadow: var(--shadow-glass), 0 0 0 1px var(--accent-ring);
+}
+
+@supports not (backdrop-filter: blur(10px)) {
+  .glass {
+    background: var(--bg-canvas);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    background var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-fast) var(--ease-apple),
+    box-shadow var(--dur-fast) var(--ease-apple),
+    filter var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple);
+}
+
+.btn:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, var(--color-cyan-500), var(--color-emerald-500));
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    0 4px 16px rgba(6, 182, 212, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, var(--color-cyan-500), var(--color-emerald-500));
+  border-color: transparent;
+  box-shadow:
+    0 6px 20px rgba(6, 182, 212, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.btn-sm {
+  padding: 6px 10px;
+  font-size: var(--text-xs);
+}
+
+.btn-lg {
+  padding: 12px 20px;
+  font-size: var(--text-md);
+}
+
+.btn .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.input {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  line-height: 1.4;
+  outline: none;
+  width: 100%;
+  transition:
+    background var(--dur-fast) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    box-shadow var(--dur-fast) var(--ease-apple),
+    color var(--dur-fast) var(--ease-apple);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position:
+    right 14px top 50%,
+    right 9px top 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  line-height: 1.4;
+  border: 1px solid transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.badge-green {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge-red {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.badge-yellow {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+}
+
+.text-display {
+  font-family: var(--font-display);
+  font-style: italic;
+}

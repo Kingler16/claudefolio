@@ -200,7 +200,7 @@
 <div class="card" style="margin-top: 24px;">
     <div class="card-title">Investment-Thesen</div>
     {% for ticker, thesis in notes['position_theses'].items() %}
-    <div style="padding: 10px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+    <div style="padding: 10px 0; border-bottom: 1px solid var(--glass-border);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
             <span class="ticker-badge">{{ ticker }}</span>
             <span class="text-muted" style="font-size: 11px;">{{ thesis.date[:10] if thesis.date else '' }}</span>

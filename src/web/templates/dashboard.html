@@ -183,13 +183,13 @@ if (allocationCtx && positions.length > 0) {
         values.push(restValue);
     }
 
-    const colors = ['#3b82f6','#4ade80','#f87171','#facc15','#8b5cf6','#ec4899','#06b6d4','#f97316','#64748b'];
+    const colors = window.VeloraChartTheme.colors;
 
     new Chart(allocationCtx, {
         type: 'doughnut',
         data: {
             labels: labels,
-            datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderColor: '#0f172a', borderWidth: 2 }]
+            datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderColor: VeloraChartTheme.bodyBg(), borderWidth: 2 }]
         },
         options: {
             responsive: true,
@@ -198,7 +198,7 @@ if (allocationCtx && positions.length > 0) {
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { color: '#94a3b8', font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 }
+                    labels: { color: VeloraChartTheme.text(), font: { size: 11 }, padding: 8, usePointStyle: true, pointStyleWidth: 8 }
                 },
                 tooltip: {
                     callbacks: {
@@ -220,11 +220,11 @@ if (allocationCtx && positions.length > 0) {
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = 'bold 16px -apple-system, sans-serif';
-                ctx.fillStyle = '#f1f5f9';
+                ctx.font = 'bold 16px Inter, -apple-system, sans-serif';
+                ctx.fillStyle = VeloraChartTheme.textPrimary();
                 ctx.fillText(formatEur(holdingsValueEur), cx, cy - 6);
-                ctx.font = '10px -apple-system, sans-serif';
-                ctx.fillStyle = '#64748b';
+                ctx.font = '10px Inter, -apple-system, sans-serif';
+                ctx.fillStyle = VeloraChartTheme.textMuted();
                 ctx.fillText('Wertpapiere', cx, cy + 12);
                 ctx.restore();
             }
@@ -236,14 +236,14 @@ if (allocationCtx && positions.length > 0) {
 const tvContainer = document.getElementById('tvChart');
 if (tvContainer && snapshots.length > 0 && typeof LightweightCharts !== 'undefined') {
     const chart = LightweightCharts.createChart(tvContainer, {
-        layout: { background: { color: '#1e293b' }, textColor: '#94a3b8', fontFamily: '-apple-system, sans-serif' },
-        grid: { vertLines: { color: 'rgba(51,65,85,0.3)' }, horzLines: { color: 'rgba(51,65,85,0.3)' } },
-        rightPriceScale: { borderColor: '#334155' },
-        timeScale: { borderColor: '#334155', timeVisible: false },
-        crosshair: { horzLine: { color: '#3b82f6', labelBackgroundColor: '#3b82f6' }, vertLine: { color: '#3b82f6', labelBackgroundColor: '#3b82f6' } },
+        layout: { background: { type: 'solid', color: 'rgba(0,0,0,0)' }, textColor: VeloraChartTheme.text(), fontFamily: 'Inter, -apple-system, sans-serif' },
+        grid: { vertLines: { color: VeloraChartTheme.grid() }, horzLines: { color: VeloraChartTheme.grid() } },
+        rightPriceScale: { borderColor: VeloraChartTheme.border() },
+        timeScale: { borderColor: VeloraChartTheme.border(), timeVisible: false },
+        crosshair: { horzLine: { color: VeloraChartTheme.accent(), labelBackgroundColor: VeloraChartTheme.accent() }, vertLine: { color: VeloraChartTheme.accent(), labelBackgroundColor: VeloraChartTheme.accent() } },
     });
     const series = chart.addAreaSeries({
-        lineColor: '#3b82f6', topColor: 'rgba(59,130,246,0.4)', bottomColor: 'rgba(59,130,246,0.0)',
+        lineColor: VeloraChartTheme.accent(), topColor: 'rgba(34,211,238,0.35)', bottomColor: 'rgba(34,211,238,0.0)',
         lineWidth: 2, priceFormat: { type: 'custom', formatter: p => formatEur(p) },
     });
     const data = snapshots.map(s => ({ time: s.date || s.month || '', value: s.total_value || s.portfolio_value || 0 })).filter(d => d.time && d.value > 0);

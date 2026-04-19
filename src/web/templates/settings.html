@@ -147,14 +147,14 @@
 <div class="card" style="margin-bottom: 16px;">
     <div class="card-title">Portfolio-Konten</div>
     {% for acc_name in accounts %}
-    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
         <span>{{ acc_name }}</span>
         <span class="text-muted">{{ portfolio.get('accounts', {}).get(acc_name, {}).get('positions', [])|length }} Positionen</span>
     </div>
     {% endfor %}
     {% if portfolio.get('bank_accounts') %}
     {% for name, acc in portfolio.get('bank_accounts', {}).items() %}
-    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,0.3);">
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--glass-border);">
         <span>{{ name }} <span class="text-muted">({{ acc.get('bank', '') }})</span></span>
         <span>{{ acc.get('value', 0)|eur }}</span>
     </div>

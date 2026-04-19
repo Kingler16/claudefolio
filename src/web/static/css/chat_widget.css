@@ -1,4 +1,4 @@
-/* Velora Chat Widget — Floating Overlay */
+/* Velora Chat Widget — Glass Floating Overlay */
 
 .velora-widget-toggle {
     position: fixed;
@@ -7,25 +7,28 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: var(--accent);
-    color: white;
+    background: linear-gradient(135deg, var(--color-cyan-500), var(--color-emerald-500));
+    color: #fff;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    box-shadow: var(--shadow-accent-glow), 0 6px 24px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     z-index: 999;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform var(--dur-base) var(--ease-apple), box-shadow var(--dur-base) var(--ease-apple), background var(--dur-base) var(--ease-apple);
 }
 .velora-widget-toggle:hover {
     transform: scale(1.08);
-    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.55);
+    box-shadow: var(--shadow-accent-glow), 0 10px 32px rgba(6, 182, 212, 0.55);
 }
 .velora-widget-toggle.active {
-    background: var(--bg-secondary);
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
     color: var(--accent);
-    border: 1px solid var(--border);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass);
 }
 
 .velora-widget-panel {
@@ -34,10 +37,12 @@
     bottom: 88px;
     width: 420px;
     height: min(640px, calc(100vh - 120px));
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border: 1px solid var(--glass-border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-elevated);
     display: none;
     flex-direction: column;
     z-index: 1000;
@@ -46,7 +51,7 @@
 }
 .velora-widget-panel.open {
     display: flex;
-    animation: widget-pop 0.2s ease-out;
+    animation: widget-pop var(--dur-base) var(--ease-snap);
 }
 @keyframes widget-pop {
     from { opacity: 0; transform: translateY(8px) scale(0.96); }
@@ -58,23 +63,24 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--glass-border);
+    background: transparent;
 }
 
 .velora-widget-title {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Space Mono', monospace;
+    font-family: var(--font-mono);
     font-weight: 700;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: var(--text-base);
     letter-spacing: -0.3px;
 }
 .velora-widget-logo {
     color: var(--accent);
-    font-size: 14px;
+    font-size: 16px;
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.35));
 }
 
 .velora-widget-actions {
@@ -87,7 +93,7 @@
     height: 26px;
     border-radius: 6px;
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--glass-border);
     color: var(--text-secondary);
     cursor: pointer;
     font-size: 14px;
@@ -96,9 +102,12 @@
     justify-content: center;
     text-decoration: none;
     line-height: 1;
-    transition: all 0.12s;
+    transition: all var(--dur-fast) var(--ease-apple);
 }
-.velora-widget-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.velora-widget-btn:hover {
+    color: var(--text-primary);
+    background: var(--glass-bg-strong);
+}
 
 .velora-widget-messages {
     flex: 1;
@@ -107,12 +116,12 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: var(--bg-primary);
+    background: transparent;
 }
 
 .velora-widget-empty {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: var(--text-xs);
     text-align: center;
     padding: 24px 12px;
     margin: auto;
@@ -122,22 +131,25 @@
 .velora-widget-msg {
     max-width: 85%;
     padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 13px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
     line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
 .velora-widget-msg.user {
     align-self: flex-end;
-    background: var(--accent);
-    color: white;
+    background: linear-gradient(135deg, var(--color-cyan-500), var(--color-emerald-500));
+    color: #fff;
     border-top-right-radius: 3px;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.20);
 }
 .velora-widget-msg.assistant {
     align-self: flex-start;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
     color: var(--text-primary);
     border-top-left-radius: 3px;
 }
@@ -147,31 +159,38 @@
 .velora-widget-msg p:last-child { margin-bottom: 0; }
 .velora-widget-msg ul, .velora-widget-msg ol { margin: 4px 0; padding-left: 20px; }
 .velora-widget-msg code {
-    background: rgba(255,255,255,0.08);
+    background: var(--glass-bg-strong);
     padding: 1px 5px;
     border-radius: 3px;
     font-size: 11px;
-    font-family: 'Space Mono', monospace;
+    font-family: var(--font-mono);
 }
-.velora-widget-msg.user code { background: rgba(255,255,255,0.2); }
+.velora-widget-msg.user code { background: rgba(255, 255, 255, 0.25); }
 .velora-widget-msg pre {
-    background: var(--bg-primary);
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
     padding: 8px;
     border-radius: 5px;
     overflow-x: auto;
     margin: 6px 0;
     font-size: 11px;
+    font-family: var(--font-mono);
 }
 
 .velora-widget-tool {
     align-self: flex-start;
     font-size: 11px;
     color: var(--text-muted);
-    background: var(--bg-secondary);
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
     border-left: 2px solid var(--accent);
     padding: 4px 8px;
     border-radius: 4px;
-    font-family: 'Space Mono', monospace;
+    font-family: var(--font-mono);
 }
 .velora-widget-tool.done { border-left-color: var(--green); }
 
@@ -179,53 +198,70 @@
     display: inline-block;
     width: 6px;
     height: 12px;
-    background: var(--text-primary);
+    background: var(--accent);
     margin-left: 2px;
     vertical-align: middle;
     animation: blink 1s infinite;
+    box-shadow: 0 0 6px rgba(34, 211, 238, 0.6);
 }
 
 .velora-widget-input-wrap {
     display: flex;
     gap: 8px;
     padding: 10px 12px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-secondary);
+    border-top: 1px solid var(--glass-border);
+    background: transparent;
     align-items: flex-end;
 }
 
 .velora-widget-input {
     flex: 1;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
     padding: 8px 10px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: var(--text-sm);
     line-height: 1.4;
     resize: none;
     outline: none;
     max-height: 140px;
     font-family: inherit;
+    transition: border-color var(--dur-fast) var(--ease-apple), box-shadow var(--dur-fast) var(--ease-apple);
 }
-.velora-widget-input:focus { border-color: var(--accent); }
+.velora-widget-input::placeholder { color: var(--text-muted); }
+.velora-widget-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-ring);
+}
 
 .velora-widget-send {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--accent);
-    color: white;
+    background: linear-gradient(135deg, var(--color-cyan-500), var(--color-emerald-500));
+    color: #fff;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: filter 0.15s;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: filter var(--dur-fast) var(--ease-apple), transform var(--dur-fast) var(--ease-apple);
 }
-.velora-widget-send:hover:not(:disabled) { filter: brightness(1.15); }
-.velora-widget-send:disabled { background: var(--border); cursor: not-allowed; color: var(--text-muted); }
+.velora-widget-send:hover:not(:disabled) {
+    filter: brightness(1.15);
+    transform: scale(1.08);
+}
+.velora-widget-send:disabled {
+    background: var(--glass-bg-strong);
+    box-shadow: none;
+    cursor: not-allowed;
+    color: var(--text-muted);
+}
 
 @media (max-width: 640px) {
     .velora-widget-panel {

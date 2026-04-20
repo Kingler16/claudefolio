@@ -27,7 +27,7 @@
     <div style="display: flex; gap: 12px;">
         <label style="flex: 1; padding: 12px; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s;" id="lang-de" onclick="selectLang('de')">
             <input type="radio" name="language" value="de" {% if settings.get('user', {}).get('language') == 'de' %}checked{% endif %} style="display:none;">
-            <div style="font-weight: 600;">Deutsch (AT)</div>
+            <div style="font-weight: 600;">Deutsch</div>
         </label>
         <label style="flex: 1; padding: 12px; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s;" id="lang-en" onclick="selectLang('en')">
             <input type="radio" name="language" value="en" {% if settings.get('user', {}).get('language') == 'en' %}checked{% endif %} style="display:none;">

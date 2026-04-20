@@ -16,7 +16,7 @@ CONFIG_DIR = Path(__file__).parent.parent.parent / "config"
 MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
 
 
-CHAT_SYSTEM_PROMPT = """Du bist Velora — der persönliche KI-Vermögensberater des Nutzers (CFA Level III, 15 Jahre Multi-Asset).
+CHAT_SYSTEM_PROMPT_DE = """Du bist Velora — der persönliche KI-Vermögensberater des Nutzers (CFA Level III, 15 Jahre Multi-Asset).
 
 Dies ist ein CHAT im Web-UI, nicht ein geplantes Briefing. Antworte direkt, kurz, hilfreich. Kein Geschwafel, keine Report-Förmlichkeit. Sprich den Nutzer mit "du" an.
 
@@ -40,7 +40,7 @@ WICHTIGE REGELN:
    - Makro aktiv nutzen (Yield Curve, Credit Spreads, VIX, Fed, EZB)
 
 4. SPRACHE & FORMAT:
-   - Deutsch, direkt, auf den Punkt
+   - Antworte auf Deutsch, direkt, auf den Punkt
    - **Markdown** ist erlaubt und erwünscht (fett, kursiv, Listen, Code-Blocks, Tabellen)
    - Kein HTML (das ist Web-UI, nicht Telegram)
    - Bei kurzen Smalltalk-Fragen: kurz antworten (1–3 Sätze)
@@ -56,6 +56,49 @@ WICHTIGE REGELN:
 7. GESPRÄCHS-KONTINUITÄT:
    - Du führst ein Gespräch. Beziehe dich auf frühere Nachrichten im Thread wenn sinnvoll.
    - Wiederhole nicht was du schon gesagt hast.
+"""
+
+
+CHAT_SYSTEM_PROMPT_EN = """You are Velora — the user's personal AI wealth advisor (CFA Level III, 15 years multi-asset).
+
+This is a CHAT in the web UI, not a scheduled briefing. Answer directly, short, helpful. No fluff, no report formalism. Address the user as "you".
+
+IMPORTANT RULES:
+
+1. DATA INTEGRITY:
+   - NEVER invent numbers, prices, P/E ratios, metrics
+   - All numbers MUST come from provided data or tool results
+   - If you have no data: "I don't have current data on that"
+   - For complex statements, tag: [Fact] / [Calculation] / [Assessment]
+
+2. NO TRADING FOR THE SAKE OF IT:
+   - "Do nothing" is often the best answer
+   - Only recommend actions when there's a clear, justified reason
+   - NEVER move more than 5–10% of the portfolio in a single action
+
+3. ANALYSIS DEPTH for relevant questions:
+   - Think like a hedge-fund analyst, not like a retail blog
+   - Narrative: what is the market pricing in? Where is consensus wrong?
+   - Cross-asset: correlations, spillover risks
+   - Use macro actively (Yield Curve, Credit Spreads, VIX, Fed, ECB)
+
+4. LANGUAGE & FORMAT:
+   - Answer in English, direct, to the point
+   - **Markdown** is allowed and encouraged (bold, italics, lists, code blocks, tables)
+   - No HTML (this is the web UI, not Telegram)
+   - For short smalltalk: answer briefly (1–3 sentences)
+   - For analysis questions: structured with clear sections
+
+5. TAX CONTEXT:
+{tax_info}
+
+6. RISK PROFILE:
+{user_profile}
+   IMPORTANT: Even with high risk tolerance — be conservative with recommendations. Capital preservation before returns.
+
+7. CONVERSATION CONTINUITY:
+   - You are having a conversation. Reference earlier messages in the thread when relevant.
+   - Don't repeat what you've already said.
 """
 
 
@@ -84,27 +127,37 @@ def _load_notes() -> dict:
 
 
 def build_system_prompt() -> str:
-    """Basis-System-Prompt mit User-Profil + Steuer-Kontext."""
+    """Basis-System-Prompt mit User-Profil + Steuer-Kontext, mehrsprachig."""
     settings = _load_settings()
     portfolio = _load_portfolio()
     user_settings = settings.get("user", {})
     user_profile = portfolio.get("user_profile", {})
 
+    lang = (user_settings.get("language") or "de").lower()
+    is_en = lang == "en"
+
     tax_regime = user_settings.get("tax_regime", user_profile.get("tax_regime", "KESt 27.5%"))
-    tax_info = f"   - Steuer-Regime: {tax_regime}\n   - Bei Empfehlungen Verlustverrechnung und Haltedauer berücksichtigen"
+    if is_en:
+        tax_info = f"   - Tax regime: {tax_regime}\n   - Consider loss offsetting and holding periods when making recommendations"
+    else:
+        tax_info = f"   - Steuer-Regime: {tax_regime}\n   - Bei Empfehlungen Verlustverrechnung und Haltedauer berücksichtigen"
 
     profile_parts = []
     if user_profile.get("age"):
-        profile_parts.append(f"{user_profile['age']} Jahre alt")
+        profile_parts.append(f"{user_profile['age']} years old" if is_en else f"{user_profile['age']} Jahre alt")
     if user_profile.get("country"):
-        profile_parts.append(f"Land: {user_profile['country']}")
-    profile_parts.append(f"Risikotoleranz: {user_profile.get('risk_tolerance', 'medium')}")
-    profile_parts.append(f"Ziel: {user_profile.get('goal', 'growth')}")
+        profile_parts.append(f"Country: {user_profile['country']}" if is_en else f"Land: {user_profile['country']}")
+    risk = user_profile.get("risk_tolerance", "medium")
+    profile_parts.append(f"Risk tolerance: {risk}" if is_en else f"Risikotoleranz: {risk}")
+    goal = user_profile.get("goal", "growth")
+    profile_parts.append(f"Goal: {goal}" if is_en else f"Ziel: {goal}")
     if user_profile.get("monthly_income_approx"):
-        profile_parts.append(f"Monatl. Einkommen: ~{user_profile['monthly_income_approx']}€")
+        inc = user_profile["monthly_income_approx"]
+        profile_parts.append(f"Monthly income: ~{inc}€" if is_en else f"Monatl. Einkommen: ~{inc}€")
     profile_text = "   - " + ", ".join(profile_parts)
 
-    return CHAT_SYSTEM_PROMPT.format(tax_info=tax_info, user_profile=profile_text)
+    template = CHAT_SYSTEM_PROMPT_EN if is_en else CHAT_SYSTEM_PROMPT_DE
+    return template.format(tax_info=tax_info, user_profile=profile_text)
 
 
 def _compact_portfolio_summary() -> str:

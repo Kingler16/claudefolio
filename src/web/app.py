@@ -527,19 +527,30 @@ async def api_get_settings():
 async def api_system_version():
     """Gibt aktuelle Git-Version + Commit-Subject zurück."""
     import subprocess as _sp
+    import shutil as _shutil
     repo_dir = Path(__file__).parent.parent.parent
+    # Explizites PATH + safe.directory damit's im systemd-Service-Kontext (minimal
+    # env, running als root auf admin-owned repo) funktioniert.
+    env = {
+        "PATH": os.environ.get("PATH", "") + ":/usr/bin:/usr/local/bin",
+        "HOME": os.environ.get("HOME", "/root"),
+    }
+    git_bin = _shutil.which("git", path=env["PATH"]) or "git"
+    base = [git_bin, "-c", f"safe.directory={repo_dir}", "-C", str(repo_dir)]
     try:
-        head = _sp.run(["git", "-C", str(repo_dir), "rev-parse", "HEAD"],
-                       capture_output=True, text=True, timeout=5)
+        head = _sp.run(base + ["rev-parse", "HEAD"],
+                       capture_output=True, text=True, timeout=5, env=env)
         if head.returncode != 0:
-            return JSONResponse({"available": False, "reason": "not_a_git_repo"})
+            return JSONResponse({
+                "available": False,
+                "reason": "git_error",
+                "detail": (head.stderr or head.stdout or "").strip()[:200],
+            })
         sha = head.stdout.strip()
-        subject = _sp.run(["git", "-C", str(repo_dir), "log", "-1", "--format=%s"],
-                          capture_output=True, text=True, timeout=5).stdout.strip()
-        date = _sp.run(["git", "-C", str(repo_dir), "log", "-1", "--format=%cI"],
-                       capture_output=True, text=True, timeout=5).stdout.strip()
-        # Optional: check ob Updates verfuegbar (fetch erforderlich — lassen wir
-        # raus um Netzwerk-Latenz im Page-Load zu vermeiden)
+        subject = _sp.run(base + ["log", "-1", "--format=%s"],
+                          capture_output=True, text=True, timeout=5, env=env).stdout.strip()
+        date = _sp.run(base + ["log", "-1", "--format=%cI"],
+                       capture_output=True, text=True, timeout=5, env=env).stdout.strip()
         return JSONResponse({
             "available": True,
             "sha": sha,

@@ -188,7 +188,7 @@ if (positions.length > 0 && typeof ApexCharts !== 'undefined' && window.VeloraAp
                 expandOnClick: true,
             }
         },
-        legend: Object.assign({}, base.legend, { position: 'right', fontSize: '11px', markers: { width: 8, height: 8 } }),
+        legend: Object.assign({}, base.legend, { position: 'bottom', horizontalAlign: 'center', fontSize: '11px', markers: { width: 8, height: 8 }, itemMargin: { horizontal: 8, vertical: 3 } }),
         tooltip: Object.assign({}, base.tooltip, {
             y: { formatter: v => v.toLocaleString(LOCALE,{minimumFractionDigits:0,maximumFractionDigits:0}) + '€' }
         }),

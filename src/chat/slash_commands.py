@@ -10,7 +10,6 @@ beide Quellen einheitlich dispatchen kann.
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from pathlib import Path
@@ -81,7 +80,7 @@ async def _briefing(args: str) -> AsyncIterator[StreamEvent]:
     arg_lower = arg.lower()
 
     if arg_lower in ("new", "neu", "generate"):
-        asyncio.create_task(_run_briefing_bg())
+        _spawn_briefing_subprocess()
         yield StreamEvent(
             "assistant_message",
             {"text": (
@@ -171,12 +170,25 @@ async def _status(_: str) -> AsyncIterator[StreamEvent]:
     yield StreamEvent("assistant_message", {"text": "\n".join(lines)})
 
 
-async def _run_briefing_bg():
+def _spawn_briefing_subprocess():
+    """Startet `python -m src.main briefing` als eigenständigen Subprocess.
+
+    Der laufende FastAPI-Prozess darf nicht blockieren — run_briefing ruft
+    intern synchrone subprocess-/HTTP-Calls, die den Event-Loop anhalten.
+    """
+    import subprocess
+    import sys
+    project_root = Path(__file__).parent.parent.parent
     try:
-        from src.main import run_briefing
-        await run_briefing()
+        subprocess.Popen(
+            [sys.executable, "-m", "src.main", "briefing"],
+            cwd=str(project_root),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
     except Exception:
-        logger.exception("Background briefing failed")
+        logger.exception("Failed to spawn briefing subprocess")
 
 
 HANDLERS: dict[str, Callable[[str], AsyncIterator[StreamEvent]]] = {

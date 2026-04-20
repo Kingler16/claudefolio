@@ -208,7 +208,8 @@
     try { localStorage.setItem('velora_last_thread', threadId); } catch {}
   };
 
-  const SUGGESTIONS = [
+  const I18N = (window.VELORA_I18N || {});
+  const SUGGESTIONS = I18N.suggestions || [
     { label: 'Wie diversifiziert bin ich?', prompt: 'Wie diversifiziert bin ich? Gib mir eine ehrliche Einschätzung.' },
     { label: 'Top 5 analysieren',            prompt: 'Analysiere meine Top 5 Holdings.' },
     { label: 'Red Flags?',                   prompt: 'Gibt es Red Flags in meinem Portfolio?' },
@@ -216,6 +217,8 @@
     { label: 'Sektor-Exposure',              prompt: 'Erkläre mein Sektor-Exposure.' },
     { label: 'Markt-Sentiment',              prompt: 'Wie ist das aktuelle Markt-Sentiment?' },
   ];
+  const WELCOME_TITLE = I18N.welcome || 'Willkommen bei Velora';
+  const WELCOME_SUB = I18N.welcome_sub || 'Frag alles zu deinem Portfolio, Markt-Sentiment oder Trade-Strategie.';
 
   const showEmptyState = () => {
     state.currentThreadId = null;
@@ -231,8 +234,8 @@
   const renderEmpty = (container) => {
     const wrap = el('div', { class: 'chat-empty-state' });
     wrap.innerHTML =
-      '<h2>Willkommen bei Velora</h2>' +
-      '<p>Frag alles zu deinem Portfolio, Markt-Sentiment oder Trade-Strategie.</p>' +
+      '<h2>' + escapeHtml(WELCOME_TITLE) + '</h2>' +
+      '<p>' + escapeHtml(WELCOME_SUB) + '</p>' +
       '<div class="suggestion-row suggestion-grid-2x3">' +
         SUGGESTIONS.map(s =>
           '<button class="suggestion" type="button" data-prompt="' + escapeHtml(s.prompt) + '">' +

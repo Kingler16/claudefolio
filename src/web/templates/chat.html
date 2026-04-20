@@ -1,12 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Chat — Velora{% endblock %}
+{% block title %}{{ t.chat.title }} — Velora{% endblock %}
 
 {% block head %}
 <link rel="stylesheet" href="/static/css/chat.css">
 <link rel="stylesheet" href="/static/vendor/highlight.css">
 <script src="/static/vendor/marked.min.js" defer></script>
 <script src="/static/vendor/highlight.min.js" defer></script>
+<script>
+  window.VELORA_I18N = {
+    welcome: {{ t.chat.welcome|tojson }},
+    welcome_sub: {{ t.chat.welcome_sub|tojson }},
+    suggestions: [
+      { label: {{ t.chat.suggestion_diversified|tojson }}, prompt: {{ t.chat.prompt_diversified|tojson }} },
+      { label: {{ t.chat.suggestion_top5|tojson }},        prompt: {{ t.chat.prompt_top5|tojson }} },
+      { label: {{ t.chat.suggestion_redflags|tojson }},    prompt: {{ t.chat.prompt_redflags|tojson }} },
+      { label: {{ t.chat.suggestion_taxloss|tojson }},     prompt: {{ t.chat.prompt_taxloss|tojson }} },
+      { label: {{ t.chat.suggestion_sectors|tojson }},     prompt: {{ t.chat.prompt_sectors|tojson }} },
+      { label: {{ t.chat.suggestion_sentiment|tojson }},   prompt: {{ t.chat.prompt_sentiment|tojson }} },
+    ]
+  };
+</script>
 {% endblock %}
 
 {% block content %}
@@ -14,9 +28,9 @@
 
     <aside class="chat-sidebar">
         <div class="chat-sidebar-header">
-            <button id="chat-new" class="btn-new" title="Neuer Chat (⌘K)">+ Neuer Chat</button>
+            <button id="chat-new" class="btn-new" title="⌘K">{{ t.chat.new_chat }}</button>
         </div>
-        <input id="chat-search" class="chat-sidebar-search" type="search" placeholder="Chats durchsuchen…" />
+        <input id="chat-search" class="chat-sidebar-search" type="search" placeholder="{{ t.chat.search_placeholder }}" />
         <div id="chat-thread-list" class="chat-thread-list"></div>
     </aside>
 
@@ -24,8 +38,8 @@
         <div class="chat-header">
             <div id="chat-header-title" class="chat-header-title">Velora</div>
             <div class="chat-header-actions">
-                <button id="chat-pin-toggle" class="chat-header-btn" title="Chat anheften">☆ Anheften</button>
-                <button id="chat-delete-btn" class="chat-header-btn" title="Chat löschen">🗑 Löschen</button>
+                <button id="chat-pin-toggle" class="chat-header-btn" title="{{ t.chat.pin }}">☆ {{ t.chat.pin }}</button>
+                <button id="chat-delete-btn" class="chat-header-btn" title="{{ t.chat.delete }}">🗑 {{ t.chat.delete }}</button>
             </div>
         </div>
 
@@ -36,8 +50,8 @@
         <div class="chat-input-wrap">
             <div class="chat-input-inner">
                 <textarea id="chat-input" class="chat-input" rows="1"
-                    placeholder="Frag Velora etwas… (Enter zum Senden, Shift+Enter für Zeilenumbruch)"></textarea>
-                <button id="chat-send" class="chat-send-btn" disabled title="Senden">
+                    placeholder="{{ t.chat.placeholder }}"></textarea>
+                <button id="chat-send" class="chat-send-btn" disabled title="{{ t.chat.send }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -45,7 +59,7 @@
                 </button>
             </div>
             <div class="chat-input-footer">
-                <span>Velora nutzt deine Portfolio-, Markt- und Briefing-Daten als Kontext.</span>
+                <span>{{ t.chat.footer_hint }}</span>
                 <span>Opus · high effort</span>
             </div>
         </div>

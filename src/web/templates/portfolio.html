@@ -9,11 +9,11 @@
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Portfolio</h1>
-        <div class="page-subtitle">Detailansicht deiner Positionen</div>
+        <h1 class="page-title">{{ t.portfolio.title }}</h1>
+        <div class="page-subtitle">{{ t.portfolio.title_sub }}</div>
     </div>
     <button class="btn btn-accent" onclick="TradeModal.open()">
-        + Trade loggen
+        {{ t.portfolio.log_trade_btn }}
     </button>
 </div>
 

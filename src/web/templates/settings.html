@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Einstellungen — Velora{% endblock %}
+{% block title %}{{ t.settings.title }} — Velora{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1 class="page-title">Einstellungen</h1>
-        <div class="page-subtitle">Profil, APIs, Automation und Depot</div>
+        <h1 class="page-title">{{ t.settings.title }}</h1>
+        <div class="page-subtitle">{{ t.settings.title_sub }}</div>
     </div>
 </div>
 
 <div class="settings-tabs" role="tablist">
-    <button type="button" class="settings-tab-btn active" data-tab="profile" role="tab" aria-selected="true">Profil</button>
-    <button type="button" class="settings-tab-btn" data-tab="api" role="tab" aria-selected="false">API-Keys</button>
-    <button type="button" class="settings-tab-btn" data-tab="automation" role="tab" aria-selected="false">Automation</button>
-    <button type="button" class="settings-tab-btn" data-tab="depot" role="tab" aria-selected="false">Depot</button>
+    <button type="button" class="settings-tab-btn active" data-tab="profile" role="tab" aria-selected="true">{{ t.settings.tab_profile }}</button>
+    <button type="button" class="settings-tab-btn" data-tab="api" role="tab" aria-selected="false">{{ t.settings.tab_api }}</button>
+    <button type="button" class="settings-tab-btn" data-tab="automation" role="tab" aria-selected="false">{{ t.settings.tab_automation }}</button>
+    <button type="button" class="settings-tab-btn" data-tab="depot" role="tab" aria-selected="false">{{ t.settings.tab_depot }}</button>
 </div>
 
 <form id="settingsForm" onsubmit="saveSettings(event)">
@@ -23,7 +23,7 @@
 
 <!-- Sprache -->
 <div class="card" style="margin-bottom: 16px;">
-    <div class="card-title">Sprache / Language</div>
+    <div class="card-title">{{ t.settings.language_card }}</div>
     <div style="display: flex; gap: 12px;">
         <label style="flex: 1; padding: 12px; background: var(--glass-bg); border: 2px solid var(--glass-border); border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.15s;" id="lang-de" onclick="selectLang('de')">
             <input type="radio" name="language" value="de" {% if settings.get('user', {}).get('language') == 'de' %}checked{% endif %} style="display:none;">
@@ -38,7 +38,7 @@
 
 <!-- Währung & Steuer -->
 <div class="card" style="margin-bottom: 16px;">
-    <div class="card-title">Währung & Steuer</div>
+    <div class="card-title">{{ t.settings.currency_tax }}</div>
     <div style="margin-bottom: 14px;">
         <label class="field-label">Standard-Währung beim Trade-Logging</label>
         <div style="display: flex; gap: 10px;">
@@ -214,7 +214,7 @@
 <div id="settingsMsg" style="display:none; margin: 16px 0; padding: 10px 14px; border-radius: 8px; font-size: 13px;"></div>
 <div class="settings-sticky-bar">
     <button type="submit" class="btn btn-accent" id="settingsSaveBtn">
-        Alle Einstellungen speichern
+        {{ t.settings.save_all }}
     </button>
 </div>
 
@@ -383,30 +383,7 @@ function selectLang(lang) {
     const ri = document.querySelector('input[name="language"][value="' + lang + '"]');
     if (ri) ri.checked = true;
 }
-const _initialLang = '{{ settings.get("user", {}).get("language", "de") }}';
-selectLang(_initialLang);
-
-// Auto-save language on click: sprachwechsel soll sofort wirken, ohne "Speichern"-Klick.
-function saveLanguage(lang) {
-    if (lang === _initialLang) return;
-    fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: { language: lang } }),
-    })
-    .then(r => r.json().then(d => ({ ok: r.ok, data: d })))
-    .then(({ ok }) => {
-        if (ok) {
-            if (window.toast && window.toast.success) window.toast.success(lang === 'en' ? 'Language set to English' : 'Sprache auf Deutsch gesetzt');
-            setTimeout(() => location.reload(), 500);
-        } else if (window.toast && window.toast.error) {
-            window.toast.error('Fehler beim Speichern der Sprache');
-        }
-    })
-    .catch(() => { if (window.toast && window.toast.error) window.toast.error('Verbindungsfehler'); });
-}
-document.getElementById('lang-de').addEventListener('click', () => saveLanguage('de'));
-document.getElementById('lang-en').addEventListener('click', () => saveLanguage('en'));
+selectLang('{{ settings.get("user", {}).get("language", "de") }}');
 
 function saveSettings(e) {
     e.preventDefault();

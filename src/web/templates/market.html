@@ -8,8 +8,8 @@
 {% block content %}
 <div class="page-header" style="margin-bottom: var(--space-3);">
     <div>
-        <h1 class="page-title">Markt-Ueberblick</h1>
-        <div class="page-subtitle">Indizes, News, Makrodaten & Kalender</div>
+        <h1 class="page-title">{{ t.markt.title }}</h1>
+        <div class="page-subtitle">{{ t.markt.subtitle }}</div>
     </div>
     {% if calendar and calendar.get('market_status') %}
     {% set ms = calendar['market_status'] %}

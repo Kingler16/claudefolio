@@ -55,7 +55,8 @@ def _load_json(path: Path) -> dict | list:
 
 
 def _load_settings() -> dict:
-    return _load_json(CONFIG_DIR / "settings.json") or {}
+    from src.config_loader import load_settings
+    return load_settings()
 
 
 def _load_portfolio() -> dict:

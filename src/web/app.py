@@ -99,16 +99,17 @@ templates.env.filters["number"] = format_number
 from src.chat.routes import router as chat_router
 app.include_router(chat_router)
 
+# PWA-Router (Manifest + Service Worker auf Root-Scope)
+from src.web.routes.pwa import router as pwa_router
+app.include_router(pwa_router)
+
+
+from src.config_loader import load_settings as _load_settings_impl
+
 
 def _load_settings() -> dict:
-    """Liest settings.json."""
-    try:
-        import json as _json
-        settings_path = Path(__file__).parent.parent.parent / "config" / "settings.json"
-        with open(settings_path) as f:
-            return _json.load(f)
-    except Exception:
-        return {}
+    """Liest settings.json mit ENV-Overrides (siehe src/config_loader.py)."""
+    return _load_settings_impl()
 
 
 def _get_lang() -> str:

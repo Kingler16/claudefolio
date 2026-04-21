@@ -3,10 +3,10 @@
 {% block title %}{{ t.chat.title }} — Velora{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/css/chat.css">
-<link rel="stylesheet" href="/static/vendor/highlight.css">
-<script src="/static/vendor/marked.min.js" defer></script>
-<script src="/static/vendor/highlight.min.js" defer></script>
+<link rel="stylesheet" href="/static/css/chat.css?v={{ asset_v }}">
+<link rel="stylesheet" href="/static/vendor/highlight.css?v={{ asset_v }}">
+<script src="/static/vendor/marked.min.js?v={{ asset_v }}" defer></script>
+<script src="/static/vendor/highlight.min.js?v={{ asset_v }}" defer></script>
 <script>
   window.VELORA_I18N = {
     welcome: {{ t.chat.welcome|tojson }},

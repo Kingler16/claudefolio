@@ -69,10 +69,7 @@ logger = logging.getLogger(__name__)
 
 CONFIG_DIR = Path(__file__).parent.parent / "config"
 
-
-def load_settings() -> dict:
-    with open(CONFIG_DIR / "settings.json") as f:
-        return json.load(f)
+from src.config_loader import load_settings  # noqa: E402  ENV-Override + settings.json
 
 
 async def run_briefing():

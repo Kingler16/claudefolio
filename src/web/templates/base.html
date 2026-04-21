@@ -2,16 +2,21 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#050814" media="(prefers-color-scheme: dark)">
     <meta name="theme-color" content="#eef3fb" media="(prefers-color-scheme: light)">
     <meta name="color-scheme" content="dark light">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Velora">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>{% block title %}Velora{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="/static/logo.svg?v=3">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png?v=3">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png?v=3">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png?v=3">
-    <link rel="shortcut icon" href="/static/favicon-32.png?v=3">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg?v={{ asset_v }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png?v={{ asset_v }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png?v={{ asset_v }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png?v={{ asset_v }}">
+    <link rel="shortcut icon" href="/static/favicon-32.png?v={{ asset_v }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -19,7 +24,7 @@
     <link rel="stylesheet" href="/static/css/background.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/main.css?v={{ asset_v }}">
-    <script src="/static/vendor/htmx.min.js"></script>
+    <script src="/static/vendor/htmx.min.js?v={{ asset_v }}"></script>
     <script src="/static/js/chart-theme.js?v={{ asset_v }}"></script>
     <script src="/static/js/sparkline.js?v={{ asset_v }}" defer></script>
     <script src="/static/js/toast.js?v={{ asset_v }}" defer></script>
@@ -64,6 +69,14 @@
       // Auto-Reload alle 15 Min — außer auf der Chat-Seite (Konversation nicht killen).
       if (!document.querySelector('.chat-layout')) {
         setTimeout(()=>location.reload(), 15*60*1000);
+      }
+      // PWA: Service Worker registrieren (Phase 0).
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+            console.warn('Service Worker registration failed:', err);
+          });
+        });
       }
     </script>
 </body>

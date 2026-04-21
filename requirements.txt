@@ -9,3 +9,10 @@ uvicorn[standard]>=0.32
 jinja2>=3.1
 mcp>=1.0
 pydantic>=2
+# PWA / Web Push
+pywebpush>=1.14.0
+py-vapid>=1.9.0
+cryptography>=41.0.0
+# Share-Target: Bild-Verarbeitung (optional, für OCR-Preprocessing)
+Pillow>=10.0.0
+python-multipart>=0.0.9

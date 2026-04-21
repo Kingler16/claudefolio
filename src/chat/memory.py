@@ -103,11 +103,8 @@ IMPORTANT RULES:
 
 
 def _load_settings() -> dict:
-    try:
-        with open(CONFIG_DIR / "settings.json") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    from src.config_loader import load_settings
+    return load_settings()
 
 
 def _load_portfolio() -> dict:

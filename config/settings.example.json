@@ -30,6 +30,16 @@
   },
   "web": {
     "host": "0.0.0.0",
-    "port": 8080
+    "port": 8080,
+    "public_url": ""
+  },
+  "web_push": {
+    "vapid_public_key": "",
+    "vapid_private_key": "",
+    "vapid_subject": "mailto:change-me@example.com"
+  },
+  "notifications": {
+    "telegram_enabled": true,
+    "push_enabled": true
   }
 }

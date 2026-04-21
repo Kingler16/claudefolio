@@ -201,7 +201,7 @@
 <div class="card">
     <div class="card-title">Alle Positionen — Details</div>
     <div class="table-wrapper">
-        <table>
+        <table class="holdings-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -219,24 +219,24 @@
             <tbody>
                 {% for pos in overview.positions %}
                 <tr>
-                    <td>{{ pos.name }}</td>
-                    <td><span class="ticker-badge">{{ pos.ticker or '–' }}</span></td>
-                    <td class="text-right tabular-nums">{{ pos.current_price_eur|eur }}</td>
-                    <td class="text-right text-muted tabular-nums">{{ pos.buy_in_eur|eur }}</td>
-                    <td class="text-right tabular-nums" style="font-weight: 600;">{{ pos.current_value_eur|eur }}</td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}">
+                    <td class="primary">{{ pos.name }}</td>
+                    <td data-label="Ticker"><span class="ticker-badge">{{ pos.ticker or '–' }}</span></td>
+                    <td class="text-right tabular-nums" data-label="Kurs">{{ pos.current_price_eur|eur }}</td>
+                    <td class="text-right text-muted tabular-nums" data-label="Buy-In">{{ pos.buy_in_eur|eur }}</td>
+                    <td class="text-right tabular-nums" data-label="Wert" style="font-weight: 600;">{{ pos.current_value_eur|eur }}</td>
+                    <td class="text-right tabular-nums {{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}" data-label="P&L">
                         {{ pos.pnl_pct|pct }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1m_pct and pos.perf_1m_pct >= 0 else 'negative' if pos.perf_1m_pct else '' }}">
+                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1m_pct and pos.perf_1m_pct >= 0 else 'negative' if pos.perf_1m_pct else '' }}" data-label="1 Monat">
                         {{ pos.perf_1m_pct|pct if pos.perf_1m_pct is not none else '–' }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_6m_pct and pos.perf_6m_pct >= 0 else 'negative' if pos.perf_6m_pct else '' }}">
+                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_6m_pct and pos.perf_6m_pct >= 0 else 'negative' if pos.perf_6m_pct else '' }}" data-label="6 Monate">
                         {{ pos.perf_6m_pct|pct if pos.perf_6m_pct is not none else '–' }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1y_pct and pos.perf_1y_pct >= 0 else 'negative' if pos.perf_1y_pct else '' }}">
+                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1y_pct and pos.perf_1y_pct >= 0 else 'negative' if pos.perf_1y_pct else '' }}" data-label="1 Jahr">
                         {{ pos.perf_1y_pct|pct if pos.perf_1y_pct is not none else '–' }}
                     </td>
-                    <td class="text-muted" style="font-size: 11px;">{{ pos.sector or '–' }}</td>
+                    <td class="text-muted" data-label="Sektor" style="font-size: 11px;">{{ pos.sector or '–' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

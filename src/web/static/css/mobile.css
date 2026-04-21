@@ -1,0 +1,212 @@
+/* Velora — Mobile Component-Level-Overrides (<768px)
+ *
+ * Touch-Targets auf 44px, Toast-Position, Chat Full-Screen, Holdings-Table
+ * als Stacked-Card-List, Chat-Widget aus.
+ */
+
+@media (max-width: 767.98px) {
+
+    /* ─── Touch-Targets ≥ 44px ──────────────────────────── */
+
+    .btn {
+        padding: 12px 16px;
+        min-height: 44px;
+        font-size: 14px;
+    }
+    .btn-sm {
+        padding: 10px 14px;
+        min-height: 40px;
+    }
+    .btn-lg {
+        padding: 14px 20px;
+        min-height: 48px;
+    }
+
+    input.input,
+    select.input,
+    textarea.input,
+    .input {
+        padding: 12px 14px;
+        min-height: 44px;
+        font-size: 16px;  /* verhindert iOS-Auto-Zoom beim Fokus */
+    }
+
+    .sidebar-nav a {
+        padding: 14px var(--space-4);
+        min-height: 48px;
+        font-size: 15px;
+    }
+
+    /* ─── Toast: oben statt unten-rechts (Home-Indicator + Dynamic Island frei) ── */
+
+    .toast-stack {
+        bottom: auto;
+        right: auto;
+        top: max(12px, calc(var(--safe-top) + 8px));
+        left: max(12px, calc(var(--safe-left) + 4px));
+        right: max(12px, calc(var(--safe-right) + 4px));
+        align-items: stretch;
+    }
+    .toast {
+        min-height: 48px;
+    }
+
+    /* ─── Holdings-/Generic-Tables → stacked Cards ──────── */
+
+    .holdings-table,
+    .holdings-table thead,
+    .holdings-table tbody,
+    .holdings-table tr,
+    .holdings-table td {
+        display: block;
+    }
+    .holdings-table thead { display: none; }
+    .holdings-table tr {
+        padding: 12px;
+        margin-bottom: 8px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        position: relative;
+    }
+    .holdings-table td {
+        padding: 4px 0;
+        white-space: normal;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+    }
+    .holdings-table td[data-label]::before {
+        content: attr(data-label);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        min-width: 80px;
+    }
+    /* Erste Zeile — meist Ticker — größer und ohne Label */
+    .holdings-table td.primary {
+        font-size: 15px;
+        font-weight: 700;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .holdings-table td.primary::before {
+        display: none;
+    }
+
+    /* Fallback: generische Tables bleiben scrollbar, aber mit sichtbarem Hinweis */
+    .table-wrapper {
+        position: relative;
+    }
+    .table-wrapper::after {
+        content: "← wischen →";
+        position: absolute;
+        bottom: -18px;
+        right: 4px;
+        font-size: 9px;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        opacity: 0.6;
+    }
+
+    /* ─── Index-Bar: vertikales Wrap statt horizontal scroll ─── */
+
+    .index-bar {
+        flex-wrap: wrap;
+        mask-image: none;
+        -webkit-mask-image: none;
+        gap: 14px var(--space-3);
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: var(--space-3);
+    }
+    .index-item {
+        flex: 1 0 calc(50% - 14px);
+    }
+
+    /* ─── Chat Full-Page mobile ─────────────────────────── */
+
+    .chat-layout {
+        grid-template-columns: 1fr;
+        height: calc(100dvh - var(--safe-top) - var(--bottom-nav-h) - var(--safe-bottom));
+    }
+    .chat-sidebar {
+        display: none;
+    }
+    .chat-sidebar.mobile-open {
+        display: flex;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 85vw;
+        max-width: 320px;
+        z-index: 100;
+        background: var(--color-night-1, #0b1433);
+        border-right: 1px solid var(--glass-border);
+        padding-top: calc(var(--safe-top) + var(--space-3));
+        padding-bottom: calc(var(--safe-bottom) + var(--space-3));
+    }
+    .chat-main {
+        height: 100%;
+    }
+    .chat-messages {
+        padding: 14px 12px;
+    }
+    .msg {
+        max-width: 90%;
+    }
+    .chat-input-wrap {
+        padding: 10px 12px
+                 max(12px, calc(var(--safe-bottom) + 8px))
+                 12px;
+    }
+    .chat-send-btn {
+        width: 44px;
+        height: 44px;
+    }
+    .chat-thread-item {
+        padding: 14px 12px;
+        min-height: 52px;
+    }
+
+    /* ─── Chat-Widget aus — auf Mobile geht's über Bottom-Nav-Tab "Chat" ─── */
+
+    .velora-widget-toggle,
+    .velora-widget-panel {
+        display: none !important;
+    }
+
+    /* ─── Typografie-Scale etwas kleiner ────────────────── */
+
+    .kpi-hero-value {
+        font-size: 32px;
+    }
+    .page-title {
+        font-size: 22px;
+    }
+    .kpi-value {
+        font-size: 20px;
+    }
+    .hero-greeting {
+        font-size: 20px;
+    }
+
+    /* ─── Modal nutzt mehr Breite ───────────────────────── */
+
+    .modal-overlay > * {
+        max-width: 95vw;
+        max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 20px);
+        overflow-y: auto;
+    }
+
+    /* ─── Page-Header wird einspaltig (main.css hat's schon, hier feintunen) ── */
+
+    .page-header {
+        gap: var(--space-2);
+    }
+}

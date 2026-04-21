@@ -1,0 +1,65 @@
+/* Velora — Responsive Tokens + Mobile-First-Layout-Inversion
+ *
+ * Grund-Layout (main.css) ist Desktop-First.  Diese Datei kippt das auf Mobile:
+ * Sidebar wird zu einem Off-Canvas-Drawer, Main-Content bekommt Safe-Area-Padding,
+ * Bottom-Nav ist fixed unten.  Ab 768px springt alles zurück zum Desktop-Layout.
+ */
+
+:root {
+    --safe-top:    env(safe-area-inset-top, 0px);
+    --safe-right:  env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left:   env(safe-area-inset-left, 0px);
+    --bottom-nav-h: 60px;
+}
+
+@media (max-width: 767.98px) {
+    /* Sidebar slidet von links ein — main.css hat die Base-Transform schon, wir
+       justieren nur Breite/Padding, damit Safe-Area respektiert wird. */
+    .sidebar {
+        width: min(85vw, 320px);
+        padding-top: max(var(--space-5), calc(var(--safe-top) + var(--space-3)));
+        padding-bottom: calc(var(--safe-bottom) + var(--space-5));
+    }
+
+    /* Main-Content: Padding berücksichtigt Notch + Bottom-Nav + Home-Indicator. */
+    .main-content {
+        padding-top: max(var(--space-3), calc(var(--safe-top) + var(--space-2)));
+        padding-right: max(var(--space-3), var(--safe-right));
+        padding-left: max(var(--space-3), var(--safe-left));
+        padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + var(--space-4));
+    }
+
+    /* Burger-Menu respektiert Notch */
+    .mobile-toggle {
+        top: max(10px, calc(var(--safe-top) + 6px));
+        left: max(10px, calc(var(--safe-left) + 4px));
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Backdrop wenn Sidebar offen (Tap außerhalb schließt) */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(3, 5, 16, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 49;
+        animation: velora-fade-in 200ms var(--ease-apple);
+    }
+    body.sidebar-open .sidebar-backdrop {
+        display: block;
+    }
+
+    @keyframes velora-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+}
+
+/* Desktop bleibt wie vorher.  Bottom-Nav wird ab 768px via bottom-nav.css versteckt. */

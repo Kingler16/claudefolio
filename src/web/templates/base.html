@@ -24,6 +24,9 @@
     <link rel="stylesheet" href="/static/css/background.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/components.css?v={{ asset_v }}">
     <link rel="stylesheet" href="/static/css/main.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/responsive.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/bottom-nav.css?v={{ asset_v }}">
+    <link rel="stylesheet" href="/static/css/mobile.css?v={{ asset_v }}">
     <script src="/static/vendor/htmx.min.js?v={{ asset_v }}"></script>
     <script src="/static/js/chart-theme.js?v={{ asset_v }}"></script>
     <script src="/static/js/sparkline.js?v={{ asset_v }}" defer></script>
@@ -61,6 +64,8 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    {% include "components/bottom-nav.html" %}
 
     {% include "components/chat_widget.html" %}
 

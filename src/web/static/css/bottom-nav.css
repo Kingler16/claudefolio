@@ -1,0 +1,74 @@
+/* Velora — Mobile Bottom-Nav (nur <768px sichtbar) */
+
+.bottom-nav {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+        padding-bottom: var(--safe-bottom);
+        padding-left: var(--safe-left);
+        padding-right: var(--safe-right);
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-top: 1px solid var(--glass-border);
+        box-shadow: 0 -4px 20px rgba(3, 5, 16, 0.35);
+        display: flex;
+        z-index: 45;
+    }
+
+    .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        gap: 3px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color var(--dur-fast) var(--ease-apple), background var(--dur-fast) var(--ease-apple);
+        -webkit-tap-highlight-color: transparent;
+        padding: 6px 4px;
+        position: relative;
+    }
+
+    .bottom-nav-item:active {
+        background: var(--glass-bg-strong);
+    }
+
+    .bottom-nav-item.active {
+        color: var(--accent);
+    }
+
+    .bottom-nav-item.active::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 20%;
+        right: 20%;
+        height: 2px;
+        background: var(--accent);
+        border-radius: 0 0 2px 2px;
+        box-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+    }
+
+    .bottom-nav-item .icon {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .bottom-nav-item .label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+}

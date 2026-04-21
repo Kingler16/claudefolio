@@ -51,6 +51,7 @@ def close_recommendation_on_trade(ticker: str, trade_action: str):
         recs = json.load(f)
 
     updated = False
+    closed_tickers: list[str] = []
     for rec in recs:
         if rec.get("status") != "open":
             continue
@@ -60,11 +61,28 @@ def close_recommendation_on_trade(ticker: str, trade_action: str):
             rec["status"] = "executed"
             rec["outcome"] = f"Trade ausgeführt ({trade_action})"
             updated = True
+            closed_tickers.append(rec_ticker)
             logger.info(f"Empfehlung geschlossen: {rec_ticker} ({trade_action})")
 
     if updated:
         with open(recs_path, "w") as f:
             json.dump(recs, f, indent=2, ensure_ascii=False)
+
+        # Push-Notification (Kategorie: recommendation_closed)
+        try:
+            from src.delivery.push_sender import send_push_safe
+            action_label = "Kauf" if trade_action == "buy" else "Verkauf"
+            for t in closed_tickers:
+                send_push_safe(
+                    category="recommendation_closed",
+                    title=f"Empfehlung {t} geschlossen",
+                    body=f"Auto-Close nach {action_label} von {ticker}",
+                    url="/recommendations",
+                    tag=f"rec-{t}",
+                    data={"ticker": t, "trade_action": trade_action},
+                )
+        except Exception:
+            logger.exception("Push für recommendation_closed fehlgeschlagen")
 
 
 async def send_briefing(bot_token: str, chat_id: str, text: str):

@@ -176,12 +176,38 @@ async def run_briefing():
                 for ticker, thesis in structured["position_theses_updates"].items():
                     add_position_thesis(ticker, thesis)
 
-        # 6. Via Telegram senden
-        if tg.get("bot_token") and tg.get("chat_id"):
+        # 6. Via Telegram senden (wenn aktiviert)
+        try:
+            from src.chat.db import is_channel_enabled
+            telegram_on = is_channel_enabled("briefings", "telegram")
+        except Exception:
+            telegram_on = True
+
+        if tg.get("bot_token") and tg.get("chat_id") and telegram_on:
             logger.info("Sende via Telegram...")
             await send_briefing(tg["bot_token"], tg["chat_id"], briefing_text)
+        elif not telegram_on:
+            logger.info("Telegram-Briefings deaktiviert (notification_preferences)")
+            print(briefing_text)
         else:
             print(briefing_text)
+
+        # 7. Push-Notification (Kategorie: briefings)
+        try:
+            from datetime import date
+            from src.delivery.push_sender import send_push_safe
+            summary_text = ""
+            if structured and structured.get("summary"):
+                summary_text = str(structured["summary"])[:120]
+            send_push_safe(
+                category="briefings",
+                title=f"Briefing · {date.today().strftime('%d.%m.')}",
+                body=summary_text or "Neues Briefing ist da.",
+                url="/briefings",
+                tag="briefing",
+            )
+        except Exception:
+            logger.exception("Push für Briefing fehlgeschlagen")
 
     except Exception as e:
         error_msg = f"Briefing fehlgeschlagen: {e}\n{traceback.format_exc()}"

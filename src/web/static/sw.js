@@ -127,3 +127,61 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+/* ─── Push Notifications (Phase 3) ──────────────────────── */
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (_) {
+    data = { title: 'Velora', body: event.data ? event.data.text() : '' };
+  }
+
+  const title = data.title || 'Velora';
+  const options = {
+    body: data.body || '',
+    icon: '/static/icons/icon-192.png',
+    badge: '/static/icons/icon-badge.png',
+    tag: data.tag || data.category || 'velora',
+    data: { url: data.url || '/', category: data.category, ...(data.data || {}) },
+    renotify: Boolean(data.renotify),
+    requireInteraction: false,
+    silent: false,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    // Fokussiere einen existierenden Tab wenn er bereits die Ziel-URL zeigt
+    for (const client of allClients) {
+      try {
+        const url = new URL(client.url);
+        if (url.pathname === targetUrl || client.url.endsWith(targetUrl)) {
+          if ('focus' in client) return client.focus();
+        }
+      } catch (_) { /* ignore */ }
+    }
+    // Sonst: ersten offenen Tab fokussieren + navigieren, sonst neuen öffnen
+    if (allClients.length > 0) {
+      const client = allClients[0];
+      if ('navigate' in client) {
+        await client.navigate(targetUrl);
+        return client.focus();
+      }
+    }
+    return self.clients.openWindow(targetUrl);
+  })());
+});
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  /* Browser rotiert Endpoint — Client-JS re-subscribed beim nächsten Öffnen.
+     Wir könnten hier proaktiv re-subscriben, aber dafür bräuchten wir den
+     applicationServerKey, den wir hier nicht haben.  Stattdessen logs. */
+  console.log('[SW] pushsubscriptionchange — client re-subscribe on next load');
+});

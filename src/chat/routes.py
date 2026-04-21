@@ -289,6 +289,22 @@ async def send_message(thread_id: str, body: MessageSend, request: Request):
                                     "tool_name": matched_tool.get("name"),
                                     "params": (pa or {}).get("params") if pa else matched_tool.get("input"),
                                 })
+                                # Push: wenn User grade nicht im Chat ist (App zu / anderer Tab),
+                                # soll er Bescheid bekommen dass eine Bestätigung wartet.
+                                try:
+                                    from src.delivery.push_sender import send_push_safe
+                                    summary = (action_info.get("summary") or "").strip()
+                                    tool_label = matched_tool.get("name", "Action")
+                                    send_push_safe(
+                                        category="pending_action",
+                                        title="Velora braucht dein OK",
+                                        body=summary[:160] or f"{tool_label} wartet auf Bestätigung",
+                                        url=f"/chat?thread={thread_id}",
+                                        tag=f"confirm-{action_info['action_id']}",
+                                        data={"action_id": action_info["action_id"], "tool": tool_label},
+                                    )
+                                except Exception:
+                                    logger.exception("Push für pending_action fehlgeschlagen")
                 elif ev.type == "done":
                     final_session_id = ev.data.get("session_id")
                     yield _sse("done", ev.data)

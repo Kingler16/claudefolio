@@ -11,6 +11,7 @@
 
 <div class="settings-tabs" role="tablist">
     <button type="button" class="settings-tab-btn active" data-tab="profile" role="tab" aria-selected="true">{{ t.settings.tab_profile }}</button>
+    <button type="button" class="settings-tab-btn" data-tab="notifications" role="tab" aria-selected="false">{% if lang == 'en' %}Notifications{% else %}Benachrichtigungen{% endif %}</button>
     <button type="button" class="settings-tab-btn" data-tab="api" role="tab" aria-selected="false">{{ t.settings.tab_api }}</button>
     <button type="button" class="settings-tab-btn" data-tab="automation" role="tab" aria-selected="false">{{ t.settings.tab_automation }}</button>
     <button type="button" class="settings-tab-btn" data-tab="depot" role="tab" aria-selected="false">{{ t.settings.tab_depot }}</button>
@@ -78,6 +79,47 @@
 </div>
 
 </div><!-- /profile -->
+
+<!-- ======== NOTIFICATIONS ======== -->
+<div data-tab-content="notifications" hidden>
+
+<div class="card" style="margin-bottom: 16px;">
+    <div class="card-title">{% if lang == 'en' %}Push Notifications{% else %}Push-Benachrichtigungen{% endif %}</div>
+
+    <div id="push-status-row" style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+        <div id="push-dot" style="width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); box-shadow: 0 0 6px currentColor;"></div>
+        <div id="push-status-text" style="flex: 1; font-size: 13px; color: var(--text-secondary);">{% if lang == 'en' %}Checking…{% else %}Prüfe…{% endif %}</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="push-test-btn">Test</button>
+        <button type="button" class="btn btn-accent btn-sm" id="push-toggle-btn">{% if lang == 'en' %}Activate{% else %}Aktivieren{% endif %}</button>
+    </div>
+
+    <div class="text-muted" style="font-size: 12px; line-height: 1.55; margin-bottom: 8px;">
+        {% if lang == 'en' %}
+            On iPhone: open Safari → Share → Add to Home Screen, then open Velora from the Home Screen and activate here.
+        {% else %}
+            Am iPhone: In Safari öffnen → Teilen → „Zum Home-Bildschirm" → Velora von dort öffnen → Aktivieren klicken.
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 16px;">
+    <div class="card-title">{% if lang == 'en' %}Channels per Category{% else %}Kanäle pro Kategorie{% endif %}</div>
+    <div class="notif-grid" id="notif-prefs-grid">
+        <div class="notif-head">{% if lang == 'en' %}Category{% else %}Kategorie{% endif %}</div>
+        <div class="notif-head" style="text-align: center;">Telegram</div>
+        <div class="notif-head" style="text-align: center;">Push</div>
+        <!-- Rows werden per JS gerendert (Kategorien kommen vom Server) -->
+    </div>
+    <div class="text-muted" style="font-size: 11px; margin-top: 10px;">
+        {% if lang == 'en' %}
+            Changes save immediately. During the rollout both channels stay on; once push is verified, turn Telegram off per category or globally.
+        {% else %}
+            Änderungen werden sofort gespeichert. Während des Rollouts bleiben beide Kanäle aktiv — wenn Push zuverlässig läuft, kannst du Telegram pro Kategorie oder global abdrehen.
+        {% endif %}
+    </div>
+</div>
+
+</div><!-- /notifications -->
 
 <!-- ======== API KEYS ======== -->
 <div data-tab-content="api" hidden>
@@ -245,6 +287,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/push.js?v={{ asset_v }}" defer></script>
 <style>
 .field-label {
     display: block;
@@ -360,6 +403,63 @@
     justify-content: flex-end;
 }
 .settings-sticky-bar .btn { min-width: 240px; justify-content: center; padding: 12px 20px; }
+
+/* Notification-Preferences-Grid */
+.notif-grid {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    gap: 8px 14px;
+    align-items: center;
+}
+.notif-head {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.notif-row-label {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+.notif-row-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+.notif-toggle {
+    appearance: none;
+    position: relative;
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    transition: background 150ms var(--ease-apple);
+    margin: 0 auto;
+    flex-shrink: 0;
+}
+.notif-toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform 150ms var(--ease-apple), background 150ms var(--ease-apple);
+}
+.notif-toggle:checked {
+    background: var(--accent-bg);
+    border-color: var(--accent-ring);
+}
+.notif-toggle:checked::after {
+    transform: translateX(20px);
+    background: var(--accent);
+}
 </style>
 
 <script>
@@ -486,6 +586,122 @@ selectLang('{{ settings.get("user", {}).get("language", "de") }}');
                 labelSpan.textContent = originalText;
                 if (window.toast) window.toast.error(STR.error);
             });
+    });
+})();
+
+// ─── Notifications-Tab ────────────────────────────────────────
+(function () {
+    const LANG = {{ lang|tojson }};
+    const CATEGORY_LABELS = LANG === 'en' ? {
+        briefings:             { t: 'Briefings',               s: 'Mon/Thu morning briefing + monthly report' },
+        trade_confirmed:       { t: 'Trade confirmed',         s: 'When a trade was successfully logged' },
+        pending_action:        { t: 'Pending confirmation',    s: 'Velora prepared a write action and needs your OK' },
+        recommendation_closed: { t: 'Recommendation closed',   s: 'Auto-close after matching trade or manual close' },
+        market_alert:          { t: 'Market alert',            s: 'VIX spike, strong index moves, watchlist trigger' },
+    } : {
+        briefings:             { t: 'Briefings',               s: 'Mo/Do-Morgen-Briefing + Monatsreport' },
+        trade_confirmed:       { t: 'Trade bestätigt',         s: 'Wenn ein Trade erfolgreich geloggt wurde' },
+        pending_action:        { t: 'Bestätigung erforderlich', s: 'Velora hat eine Write-Action vorbereitet und braucht dein OK' },
+        recommendation_closed: { t: 'Empfehlung geschlossen',  s: 'Auto-Close nach passendem Trade oder manueller Close' },
+        market_alert:          { t: 'Markt-Alert',             s: 'VIX-Spike, starke Index-Moves, Watchlist-Trigger' },
+    };
+
+    const statusDot  = document.getElementById('push-dot');
+    const statusText = document.getElementById('push-status-text');
+    const toggleBtn  = document.getElementById('push-toggle-btn');
+    const testBtn    = document.getElementById('push-test-btn');
+    const grid       = document.getElementById('notif-prefs-grid');
+
+    function setDot(color, msg) {
+        statusDot.style.background = color;
+        statusDot.style.color = color;
+        statusText.textContent = msg;
+    }
+
+    async function refreshStatus() {
+        if (!window.VeloraPush) return;
+        const s = await window.VeloraPush.status();
+        if (!s.supported) {
+            setDot('var(--loss)', LANG === 'en' ? 'Push not supported in this browser' : 'Browser unterstützt kein Push');
+            toggleBtn.disabled = true; testBtn.disabled = true;
+            return;
+        }
+        if (s.permission === 'denied') {
+            setDot('var(--loss)', LANG === 'en' ? 'Permission denied — enable in browser settings' : 'Berechtigung abgelehnt — in Browser-Einstellungen erlauben');
+            toggleBtn.disabled = true;
+            toggleBtn.textContent = LANG === 'en' ? 'Blocked' : 'Blockiert';
+            return;
+        }
+        if (s.subscribed) {
+            setDot('var(--gain)', LANG === 'en' ? 'Push active on this device' : 'Push auf diesem Gerät aktiv');
+            toggleBtn.textContent = LANG === 'en' ? 'Deactivate' : 'Deaktivieren';
+            toggleBtn.dataset.state = 'on';
+        } else {
+            setDot('var(--text-muted)', LANG === 'en' ? 'Push not active' : 'Push nicht aktiv');
+            toggleBtn.textContent = LANG === 'en' ? 'Activate' : 'Aktivieren';
+            toggleBtn.dataset.state = 'off';
+        }
+    }
+
+    async function renderPreferences() {
+        if (!grid || !window.VeloraPush) return;
+        const prefs = await window.VeloraPush.getPreferences();
+        // bestehende Rows entfernen (nur Header bleiben)
+        grid.querySelectorAll('.notif-row').forEach((el) => el.remove());
+        Object.entries(prefs).forEach(([cat, p]) => {
+            const meta = CATEGORY_LABELS[cat] || { t: cat, s: '' };
+            const label = document.createElement('div');
+            label.className = 'notif-row';
+            label.innerHTML = `<div class="notif-row-label">${meta.t}</div><div class="notif-row-sub">${meta.s}</div>`;
+
+            const tgCol = document.createElement('div');
+            tgCol.className = 'notif-row';
+            const tgBox = Object.assign(document.createElement('input'), { type: 'checkbox', className: 'notif-toggle' });
+            tgBox.checked = Boolean(p.telegram_enabled);
+            tgBox.dataset.cat = cat; tgBox.dataset.channel = 'telegram';
+            tgCol.appendChild(tgBox);
+
+            const pushCol = document.createElement('div');
+            pushCol.className = 'notif-row';
+            const pushBox = Object.assign(document.createElement('input'), { type: 'checkbox', className: 'notif-toggle' });
+            pushBox.checked = Boolean(p.push_enabled);
+            pushBox.dataset.cat = cat; pushBox.dataset.channel = 'push';
+            pushCol.appendChild(pushBox);
+
+            grid.appendChild(label);
+            grid.appendChild(tgCol);
+            grid.appendChild(pushCol);
+        });
+
+        grid.querySelectorAll('.notif-toggle').forEach((el) => {
+            el.addEventListener('change', async () => {
+                const cat = el.dataset.cat;
+                const allInputs = grid.querySelectorAll(`.notif-toggle[data-cat="${cat}"]`);
+                const payload = {};
+                payload[cat] = {};
+                allInputs.forEach((i) => { payload[cat][i.dataset.channel + '_enabled'] = i.checked; });
+                await window.VeloraPush.setPreferences(payload);
+            });
+        });
+    }
+
+    toggleBtn?.addEventListener('click', async () => {
+        toggleBtn.disabled = true;
+        if (toggleBtn.dataset.state === 'on') await window.VeloraPush.unsubscribe();
+        else await window.VeloraPush.subscribe();
+        await refreshStatus();
+        toggleBtn.disabled = false;
+    });
+
+    testBtn?.addEventListener('click', async () => {
+        testBtn.disabled = true;
+        await window.VeloraPush.test();
+        testBtn.disabled = false;
+    });
+
+    // Warten bis push.js geladen ist (defer)
+    window.addEventListener('load', () => {
+        setTimeout(() => { refreshStatus(); renderPreferences(); }, 120);
     });
 })();
 

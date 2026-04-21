@@ -42,6 +42,30 @@ def execute_pending_action(action_id: str) -> dict:
             return {"success": False, "message": f"Unbekanntes Tool: {tool}"}
 
         db.resolve_pending_action(action_id, "executed", result)
+
+        # Push bei erfolgreichem Write — Kategorie je nach Tool
+        try:
+            from src.delivery.push_sender import send_push_safe
+            if tool == "log_trade" and not result.get("error"):
+                send_push_safe(
+                    category="trade_confirmed",
+                    title=f"Trade geloggt: {params.get('ticker', '?')}",
+                    body=str(result.get("message", "")),
+                    url="/portfolio",
+                    tag=f"trade-{params.get('ticker', '')}",
+                    data={"via": "chat", "tool": tool, "params": params},
+                )
+            elif tool == "close_recommendation" and not result.get("error"):
+                send_push_safe(
+                    category="recommendation_closed",
+                    title=f"Empfehlung {params.get('ticker', '?')} geschlossen",
+                    body=str(result.get("message", "")),
+                    url="/recommendations",
+                    tag=f"rec-{params.get('ticker', '')}",
+                )
+        except Exception:
+            logger.exception("Push nach execute_pending_action fehlgeschlagen")
+
         return {"success": True, "message": result.get("message", "Erledigt."), "details": result}
 
     except Exception as e:

@@ -54,10 +54,38 @@ CREATE TABLE IF NOT EXISTS pending_actions (
     result TEXT
 );
 
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint TEXT UNIQUE NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    user_agent TEXT,
+    created_at TEXT NOT NULL,
+    last_used TEXT,
+    active INTEGER DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    category TEXT PRIMARY KEY,
+    telegram_enabled INTEGER DEFAULT 1,
+    push_enabled INTEGER DEFAULT 1,
+    updated_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_pinned_thread ON pinned_memories(thread_id);
 CREATE INDEX IF NOT EXISTS idx_pending_status ON pending_actions(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_push_active ON push_subscriptions(active);
 """
+
+# Default-Kategorien für neue Installationen / neue Kategorien nach Update.
+DEFAULT_NOTIFICATION_CATEGORIES = [
+    "briefings",         # Mo/Do-Briefings + Monthly Report
+    "trade_confirmed",   # Trade erfolgreich geloggt
+    "pending_action",    # Velora hat Write-Action vorbereitet und braucht OK
+    "recommendation_closed",  # Empfehlung wurde automatisch/manuell geschlossen
+    "market_alert",      # starke Marktbewegung, VIX-Spike etc.
+]
 
 
 def _connect() -> sqlite3.Connection:
@@ -71,6 +99,14 @@ def _connect() -> sqlite3.Connection:
 def init_db() -> None:
     with _connect() as conn:
         conn.executescript(SCHEMA)
+        # Seed Default-Kategorien (idempotent)
+        now = _now()
+        for cat in DEFAULT_NOTIFICATION_CATEGORIES:
+            conn.execute(
+                """INSERT OR IGNORE INTO notification_preferences
+                   (category, telegram_enabled, push_enabled, updated_at) VALUES (?, 1, 1, ?)""",
+                (cat, now),
+            )
 
 
 def _now() -> str:
@@ -262,3 +298,85 @@ def list_pending_actions(thread_id: Optional[str] = None, status: str = "pending
             pass
         out.append(d)
     return out
+
+
+# ── Push Subscriptions ───────────────────────────────────────
+
+def upsert_push_subscription(endpoint: str, p256dh: str, auth: str, user_agent: Optional[str] = None) -> None:
+    now = _now()
+    with _connect() as conn:
+        conn.execute(
+            """INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_agent, created_at, last_used, active)
+               VALUES (?, ?, ?, ?, ?, ?, 1)
+               ON CONFLICT(endpoint) DO UPDATE SET
+                 p256dh = excluded.p256dh,
+                 auth = excluded.auth,
+                 user_agent = excluded.user_agent,
+                 last_used = excluded.last_used,
+                 active = 1""",
+            (endpoint, p256dh, auth, user_agent, now, now),
+        )
+
+
+def deactivate_push_subscription(endpoint: str) -> None:
+    with _connect() as conn:
+        conn.execute("UPDATE push_subscriptions SET active = 0 WHERE endpoint = ?", (endpoint,))
+
+
+def get_active_push_subscriptions() -> list[dict]:
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE active = 1"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def touch_push_subscription(endpoint: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE push_subscriptions SET last_used = ? WHERE endpoint = ?",
+            (_now(), endpoint),
+        )
+
+
+# ── Notification Preferences ─────────────────────────────────
+
+def get_notification_preferences() -> dict[str, dict]:
+    """Liefert {category: {telegram_enabled, push_enabled}} — alle Kategorien."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT category, telegram_enabled, push_enabled FROM notification_preferences"
+        ).fetchall()
+    return {
+        r["category"]: {
+            "telegram_enabled": bool(r["telegram_enabled"]),
+            "push_enabled": bool(r["push_enabled"]),
+        }
+        for r in rows
+    }
+
+
+def set_notification_preference(category: str, telegram_enabled: bool, push_enabled: bool) -> None:
+    with _connect() as conn:
+        conn.execute(
+            """INSERT INTO notification_preferences (category, telegram_enabled, push_enabled, updated_at)
+               VALUES (?, ?, ?, ?)
+               ON CONFLICT(category) DO UPDATE SET
+                 telegram_enabled = excluded.telegram_enabled,
+                 push_enabled = excluded.push_enabled,
+                 updated_at = excluded.updated_at""",
+            (category, 1 if telegram_enabled else 0, 1 if push_enabled else 0, _now()),
+        )
+
+
+def is_channel_enabled(category: str, channel: str) -> bool:
+    """channel: 'telegram' | 'push'.  Unbekannte Kategorie → True (fail-open)."""
+    col = "telegram_enabled" if channel == "telegram" else "push_enabled"
+    with _connect() as conn:
+        row = conn.execute(
+            f"SELECT {col} FROM notification_preferences WHERE category = ?",
+            (category,),
+        ).fetchone()
+    if row is None:
+        return True
+    return bool(row[0])

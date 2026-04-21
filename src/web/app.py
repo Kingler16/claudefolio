@@ -103,6 +103,10 @@ app.include_router(chat_router)
 from src.web.routes.pwa import router as pwa_router
 app.include_router(pwa_router)
 
+# Push-Notification-Router
+from src.web.routes.push import router as push_router
+app.include_router(push_router)
+
 
 from src.config_loader import load_settings as _load_settings_impl
 
@@ -392,10 +396,21 @@ async def api_log_trade(request: Request):
     if account not in portfolio.get("accounts", {}):
         return JSONResponse({"error": f"Account '{account}' nicht gefunden"}, status_code=404)
 
+    from src.delivery.push_sender import send_push_safe
+
     success = update_portfolio_position(action, ticker, shares, price_eur)
     if success:
         close_recommendation_on_trade(ticker, action)
         currency_sym = '€' if trade_currency == 'EUR' else '$'
+        action_label = 'Kauf' if action == 'buy' else 'Verkauf'
+        send_push_safe(
+            category="trade_confirmed",
+            title=f"{action_label}: {ticker}",
+            body=f"{shares} × @ {price}{currency_sym} auf {account}",
+            url="/portfolio",
+            tag=f"trade-{ticker}",
+            data={"ticker": ticker, "action": action, "shares": shares, "price": price},
+        )
         return JSONResponse({"status": "ok", "message": f"{shares}x {ticker} {'gekauft' if action == 'buy' else 'verkauft'} @ {price}{currency_sym}"})
     else:
         # Position nicht gefunden — bei Kauf neue Position anlegen (mit Lock + Cash-Update)
@@ -410,6 +425,14 @@ async def api_log_trade(request: Request):
                     update_region_on_trade("buy", ticker)
                 except Exception:
                     pass
+                send_push_safe(
+                    category="trade_confirmed",
+                    title=f"Neue Position: {ticker}",
+                    body=f"{shares} × @ {price} in {account}",
+                    url="/portfolio",
+                    tag=f"trade-{ticker}",
+                    data={"ticker": ticker, "action": action, "shares": shares, "price": price, "new_position": True},
+                )
                 return JSONResponse({"status": "ok", "message": f"Neue Position: {shares}x {ticker} @ {price} in {account}"})
 
         return JSONResponse({"error": f"Ticker {ticker} nicht gefunden in {account}"}, status_code=404)

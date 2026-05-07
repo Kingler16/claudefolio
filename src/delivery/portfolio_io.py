@@ -77,6 +77,11 @@ def _atomic_write(portfolio: dict) -> None:
             json.dump(portfolio, f, indent=2, ensure_ascii=False)
             f.flush()
             os.fsync(f.fileno())
+        # Owner + Mode der Original-Datei auf das Tempfile spiegeln, sonst
+        # erbt portfolio.json nach jedem root-Write die mkstemp-Defaults
+        # (root:root 0600) — und der admin-Cronjob (Briefing) verliert
+        # den Lesezugriff.
+        _preserve_perms(PORTFOLIO_PATH, tmp_path)
         os.replace(tmp_path, PORTFOLIO_PATH)
     except Exception:
         try:
@@ -84,6 +89,24 @@ def _atomic_write(portfolio: dict) -> None:
         except OSError:
             pass
         raise
+
+
+def _preserve_perms(reference: Path, target: str | Path) -> None:
+    """Spiegelt Mode (immer) und Owner (nur wenn euid=root) von `reference` auf `target`.
+    Schluckt FileNotFoundError für den allerersten Write."""
+    try:
+        st = os.stat(reference)
+    except FileNotFoundError:
+        return
+    try:
+        os.chmod(target, st.st_mode & 0o777)
+    except OSError as e:
+        logger.warning("chmod auf %s fehlgeschlagen: %s", target, e)
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        try:
+            os.chown(target, st.st_uid, st.st_gid)
+        except OSError as e:
+            logger.warning("chown auf %s fehlgeschlagen: %s", target, e)
 
 
 def add_new_position(ticker: str, shares: float, price_eur: float, account: str, trade_currency: str = "EUR") -> bool:
@@ -133,8 +156,12 @@ def portfolio_write_lock():
     Wenn eine Exception im Block geworfen wird, wird nicht gespeichert.
     """
     LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
-    # Lock-File offen halten — fcntl.flock ist an Filedescriptor gebunden
-    with open(LOCK_FILE, "w") as lockfile:
+    # Lock-File offen halten — fcntl.flock ist an Filedescriptor gebunden.
+    # O_RDWR|O_CREAT statt "w": kein Truncate, damit ein als-root erstelltes
+    # Lock-File später auch von admin-Prozessen (Cronjob) wieder geöffnet
+    # werden kann, ohne dass jeder Aufruf Owner/Mode überschreibt.
+    fd = os.open(LOCK_FILE, os.O_RDWR | os.O_CREAT, 0o664)
+    with os.fdopen(fd, "r+") as lockfile:
         try:
             fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX)
         except OSError as e:

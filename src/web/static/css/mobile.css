@@ -146,9 +146,19 @@
 
     /* ─── Chat Full-Page mobile ──────────────────────────────────── */
 
+    /* Chat-Seite: main-content-Padding ausschalten, sonst summieren sich
+       Padding (oben Safe-Top + Space, unten Bottom-Nav + Safe + Space) und
+       chat-layout-Hoehe zu mehr als 100dvh -> ungewollter Page-Scroll. */
+    body[data-page="chat"] .main-content {
+        padding: 0;
+        animation: none;          /* page-enter Animation auf Chat nicht noetig */
+    }
+
     .chat-layout {
         grid-template-columns: 1fr;
-        height: calc(100dvh - var(--safe-top) - var(--bottom-nav-h) - var(--safe-bottom));
+        height: calc(100dvh - var(--bottom-nav-h) - var(--safe-bottom));
+        max-height: calc(100dvh - var(--bottom-nav-h) - var(--safe-bottom));
+        overflow: hidden;
     }
     .chat-sidebar { display: none; }
     .chat-sidebar.mobile-open {

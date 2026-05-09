@@ -111,29 +111,30 @@
         ],
       };
     },
-    // Donut-/Pie-Defaults: Phone zeigt dataLabels (sonst keine % sichtbar),
-    // expandOnClick auf Phone deaktiviert (Touch-Tap-Konflikt).
-    // Kleine Slices (<6%) bekommen kein Label — sonst clusteren sie sich
-    // und ueberlappen das Center-Label. Groesseres Donut-Hole auf Phone
-    // gibt dem Center-Wert Luft zur Slice-Beschriftung.
+    // Donut-/Pie-Defaults:
+    // Phone: KEINE dataLabels in den Slices — bei vielen Positionen ueber-
+    // lappen sie sich und kollidieren mit dem Center-Label. Werte stehen in
+    // der Legende unten + per Tap-auf-Slice in der Touch-Tooltip.
+    // Desktop: Standard-DataLabels mit Threshold (kleine Slices nicht
+    // beschriften, sonst Cluster).
     donutDefaults() {
       const phone = isPhone();
-      const minPct = phone ? 6 : 3;
+      const minPct = 4;
       return {
         plotOptions: {
           pie: {
-            donut: { size: phone ? '72%' : '65%' },
+            donut: { size: phone ? '68%' : '65%' },
             expandOnClick: !phone,
           },
         },
         dataLabels: {
-          enabled: phone,
+          enabled: !phone,
           formatter: function(val) {
             const n = Number(val);
             if (!isFinite(n) || n < minPct) return '';
             return n.toFixed(1) + '%';
           },
-          style: { fontSize: phone ? '10px' : '11px', fontFamily: 'Inter', fontWeight: 700, colors: ['#fff'] },
+          style: { fontSize: '11px', fontFamily: 'Inter', fontWeight: 700, colors: ['#fff'] },
           dropShadow: { enabled: true, top: 1, left: 0, blur: 2, opacity: 0.45 },
         },
       };

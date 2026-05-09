@@ -632,7 +632,14 @@ async def api_system_update():
 
     try:
         result = _sp.run(["bash", str(script)], capture_output=True, text=True, timeout=60,
-                         env={"VELORA_REPO_DIR": str(repo_dir), "PATH": os.environ.get("PATH", "")})
+                         env={
+                             "VELORA_REPO_DIR": str(repo_dir),
+                             "PATH": os.environ.get("PATH", ""),
+                             # HOME muss durchgereicht werden, damit git seine global-config
+                             # (insb. safe.directory) aus ~/.gitconfig lesen kann. Ohne HOME
+                             # wirft git bei root+admin-Repo "dubious ownership".
+                             "HOME": os.environ.get("HOME", "/root"),
+                         })
     except _sp.TimeoutExpired:
         return JSONResponse({"status": "error", "error": "update_timeout"}, status_code=504)
     except Exception as e:

@@ -144,6 +144,33 @@
       const limit = max || 18;
       return labels.map(l => (typeof l === 'string' && l.length > limit) ? l.slice(0, limit - 1) + '…' : l);
     },
+    // Sektor-Namen auf Phone als Kurzcode (fuer Treemap, wo Boxen zu schmal
+    // sind fuer 15+ Zeichen). Bekannte Sektoren bekommen feste Abkuerzungen,
+    // alles andere wird auf 8 Zeichen gekuerzt.
+    shortSectorName(name) {
+      if (!isPhone() || typeof name !== 'string') return name;
+      const map = {
+        'Communication Services': 'Comm Serv',
+        'Consumer Cyclical': 'Cons Cyc',
+        'Consumer Defensive': 'Cons Def',
+        'Consumer Staples': 'Staples',
+        'Consumer Discretionary': 'Cons Disc',
+        'Financial Services': 'Financials',
+        'Financials': 'Finance',
+        'Real Estate': 'RE',
+        'Basic Materials': 'Materials',
+        'Industrials': 'Industry',
+        'Information Technology': 'Tech',
+        'Technology': 'Tech',
+        'Healthcare': 'Health',
+        'Health Care': 'Health',
+        'Utilities': 'Utility',
+        'Energy': 'Energy',
+        'Unbekannt': 'Sonst.',
+      };
+      if (map[name]) return map[name];
+      return name.length > 9 ? name.slice(0, 8) + '…' : name;
+    },
     chartHeight,
     screenSize,
     isMobile: isPhone,    // Backwards-compat alias

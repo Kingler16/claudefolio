@@ -114,7 +114,7 @@
 <div class="card" style="margin-bottom: var(--space-5);">
     <div class="card-title">Indizes</div>
     {% if indices %}
-    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 10px;">
+    <div class="grid-cards-compact">
         {% for idx in indices[:8] %}
         {% set is_pos = idx.change_pct is not none and idx.change_pct >= 0 %}
         <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 12px 14px; border-left: 3px solid {{ 'var(--gain)' if is_pos else 'var(--loss)' if idx.change_pct is not none else 'var(--glass-border)' }};">
@@ -169,11 +169,11 @@
                         {% endif %}
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <a href="{{ item.url or item.get('link', '#') }}" target="_blank" rel="noopener" style="color: var(--text-primary); text-decoration: none; font-size: var(--text-base); font-weight: 500; line-height: 1.4; display: block;">
+                        <a href="{{ item.url or item.get('link', '#') }}" target="_blank" rel="noopener" class="news-item-title" style="color: var(--text-primary); text-decoration: none; font-size: var(--text-base); font-weight: 500; line-height: 1.4;">
                             {{ item.title or item.get('headline', '–') }}
                         </a>
                         {% if item.get('description') %}
-                        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 3px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.description[:150] }}</div>
+                        <div class="news-item-desc">{{ item.description[:200] }}</div>
                         {% endif %}
                         {% if item.get('published') or item.get('age') %}
                         <div style="font-size: 10px; color: var(--text-muted); opacity: 0.6; margin-top: 2px;">{{ item.get('age') or item.get('published', '')[:16] }}</div>
@@ -198,9 +198,9 @@
                 <div style="padding: 8px 0 8px 12px;">
                     {% for article in articles[:5] %}
                     <div style="padding: 6px 0; {% if not loop.last %}border-bottom: 1px solid var(--glass-border);{% endif %}">
-                        <a href="{{ article.url or article.get('link', '#') }}" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none; font-size: var(--text-sm); line-height: 1.4;">{{ article.title or article.get('headline', '–') }}</a>
+                        <a href="{{ article.url or article.get('link', '#') }}" target="_blank" rel="noopener" class="news-item-title" style="color: var(--accent); text-decoration: none; font-size: var(--text-sm); line-height: 1.4;">{{ article.title or article.get('headline', '–') }}</a>
                         {% if article.get('description') %}
-                        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px;">{{ article.description[:120] }}{% if article.description|length > 120 %}...{% endif %}</div>
+                        <div class="news-item-desc">{{ article.description[:160] }}</div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -218,11 +218,11 @@
             <div style="max-height: 420px; overflow-y: auto; padding-right: 4px;">
                 {% for item in macro_news_list[:20] %}
                 <div style="padding: 10px 0; {% if not loop.last %}border-bottom: 1px solid var(--glass-border);{% endif %}">
-                    <a href="{{ item.url or item.get('link', '#') }}" target="_blank" rel="noopener" style="color: var(--text-primary); text-decoration: none; font-size: var(--text-base); font-weight: 500; line-height: 1.4; display: block;">
+                    <a href="{{ item.url or item.get('link', '#') }}" target="_blank" rel="noopener" class="news-item-title" style="color: var(--text-primary); text-decoration: none; font-size: var(--text-base); font-weight: 500; line-height: 1.4;">
                         {{ item.title or item.get('headline', '–') }}
                     </a>
                     {% if item.get('description') %}
-                    <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 3px; line-height: 1.4;">{{ item.description[:200] }}</div>
+                    <div class="news-item-desc">{{ item.description[:200] }}</div>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -270,42 +270,38 @@
         </div>
         <div id="macro-us">
             {% if macro and macro.get('us') %}
-            <div class="table-wrapper">
-                <table>
-                    <tbody>
-                        {% for key, item in macro['us'].items() %}
-                        {% set val = item.get('value', item) if item is mapping else item %}
-                        <tr>
-                            <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
-                            <td class="text-right tabular-nums" style="font-weight: 600;">
-                                {{ val }}
-                                {% if 'yield' in key|lower and 'spread' in key|lower and val is number and val < 0 %}
-                                <span style="font-size: 10px; color: var(--loss); margin-left: 4px;">invertiert</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="kv-list">
+                <tbody>
+                    {% for key, item in macro['us'].items() %}
+                    {% set val = item.get('value', item) if item is mapping else item %}
+                    <tr>
+                        <td>{{ key|replace('_', ' ')|title }}</td>
+                        <td>
+                            {{ val }}
+                            {% if 'yield' in key|lower and 'spread' in key|lower and val is number and val < 0 %}
+                            <span style="font-size: 10px; color: var(--loss); margin-left: 4px;">invertiert</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
             <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine US-Makrodaten</div></div>
             {% endif %}
         </div>
         <div id="macro-eu" style="display: none;">
             {% if macro and macro.get('eu') %}
-            <div class="table-wrapper">
-                <table>
-                    <tbody>
-                        {% for key, item in macro['eu'].items() %}
-                        <tr>
-                            <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
-                            <td class="text-right tabular-nums" style="font-weight: 600;">{% if item is mapping %}{{ item.get('value', '–') }}{% else %}{{ item }}{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="kv-list">
+                <tbody>
+                    {% for key, item in macro['eu'].items() %}
+                    <tr>
+                        <td>{{ key|replace('_', ' ')|title }}</td>
+                        <td>{% if item is mapping %}{{ item.get('value', '–') }}{% else %}{{ item }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% else %}
             <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine EU-Makrodaten</div></div>
             {% endif %}
@@ -470,8 +466,8 @@ document.querySelectorAll('.news-tab').forEach(b => b.addEventListener('click', 
                 style: { fontSize: labelFs, fontFamily: 'Inter', fontWeight: 600 },
                 formatter: function(_, opts) {
                     const pt = opts.w.config.series[0].data[opts.dataPointIndex];
-                    // Phone: Sektor-Namen kürzen für engere Rechtecke.
-                    const name = phone && typeof pt.x === 'string' && pt.x.length > 12 ? pt.x.slice(0, 11) + '…' : pt.x;
+                    // Phone: Sektor-Namen via Mapping-Tabelle abkuerzen (Tech, Comm Serv, …)
+                    const name = window.VeloraApex.shortSectorName(pt.x);
                     return [name, (pt.y >= 0 ? '+' : '') + pt.y.toFixed(phone ? 1 : 2) + '%'];
                 }
             },

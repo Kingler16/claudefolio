@@ -174,6 +174,87 @@
     .chart-h-lg { height: 360px; }
 }
 
+/* ─── Compact-Cards-Grid (Phone 2-spaltig, Tablet 3, Desktop 4) ──
+ * Fuer kleine, gleichformatige Cards (Indizes, KPIs etc.) wo wir auch
+ * auf Phone 2 Spalten wollen statt 1. min-width:0 verhindert horizontales
+ * Wachsen einzelner Cards bei langem Inhalt.
+ */
+.grid-cards-compact {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.grid-cards-compact > * { min-width: 0; }
+@media (min-width: 768px) {
+    .grid-cards-compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+    .grid-cards-compact { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ─── Key-Value-Liste (Macro-Tabellen, alles 2-Spalten "Label | Wert") ──
+ * Auf Phone wird das normale Tabellen-Rendering ersetzt durch eine
+ * vertikale Flex-Liste pro Row, sodass Labels links und Werte rechts
+ * sichtbar sind ohne horizontales Scrollen.
+ */
+@media (max-width: 767.98px) {
+    table.kv-list,
+    table.kv-list tbody,
+    table.kv-list tr {
+        display: block;
+        width: 100%;
+    }
+    table.kv-list thead { display: none; }
+    table.kv-list tr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--glass-border);
+        min-height: 36px;
+    }
+    table.kv-list td {
+        padding: 0;
+        border: 0;
+        white-space: normal;
+    }
+    table.kv-list td:first-child {
+        flex: 1 1 auto;
+        font-size: 13px;
+        color: var(--text-secondary);
+        text-align: left;
+    }
+    table.kv-list td:last-child {
+        flex: 0 0 auto;
+        text-align: right;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text-primary);
+    }
+}
+
+/* ─── News-Item: Title in 2 Zeilen clampen, Description in 2 Zeilen ──
+ * Lange Headlines wraps statt rechts abgeschnitten.
+ */
+.news-item-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+.news-item-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    margin-top: 3px;
+    line-height: 1.4;
+}
+
 /* ─── Desktop: Utility-Klassen entfalten volle Spaltenzahl ──────── */
 @media (min-width: 1024px) {
     .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }

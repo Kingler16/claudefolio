@@ -35,7 +35,7 @@
 {% endif %}
 
 <div class="card" style="padding: var(--space-5); margin-bottom: var(--space-5);">
-    <div style="display: grid; grid-template-columns: minmax(240px, 1fr) 1.5fr; gap: var(--space-5); align-items: center;">
+    <div class="grid grid-cols-2" style="gap: var(--space-5); align-items: center;">
         <div>
             <div class="card-title">Markt-Stimmung</div>
             <div id="fgGaugeContainer">
@@ -103,7 +103,7 @@
         <div>
             <div class="card-title">Sektoren heute</div>
             {% if sector_heatmap %}
-            <div id="sectorTreemap" style="height: 280px;"></div>
+            <div id="sectorTreemap"></div>
             {% else %}
             <div class="empty-state-v2"><div class="empty-state-icon">▦</div><div class="empty-state-title">Keine Sektor-Daten</div></div>
             {% endif %}
@@ -114,7 +114,7 @@
 <div class="card" style="margin-bottom: var(--space-5);">
     <div class="card-title">Indizes</div>
     {% if indices %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;">
+    <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 10px;">
         {% for idx in indices[:8] %}
         {% set is_pos = idx.change_pct is not none and idx.change_pct >= 0 %}
         <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 12px 14px; border-left: 3px solid {{ 'var(--gain)' if is_pos else 'var(--loss)' if idx.change_pct is not none else 'var(--glass-border)' }};">
@@ -147,7 +147,7 @@
 </div>
 
 <div class="card" style="margin-bottom: var(--space-5);">
-    <div style="display:flex; gap: 4px; margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border);">
+    <div style="display:flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border);">
         <button class="btn btn-ghost news-tab active" data-tab="buzz" style="border-radius: 0; border-bottom: 2px solid var(--accent); color: var(--accent);">Headline Buzz</button>
         <button class="btn btn-ghost news-tab" data-tab="positions" style="border-radius: 0;">Deine Positionen</button>
         <button class="btn btn-ghost news-tab" data-tab="macro" style="border-radius: 0;">Makro</button>
@@ -270,38 +270,42 @@
         </div>
         <div id="macro-us">
             {% if macro and macro.get('us') %}
-            <table>
-                <tbody>
-                    {% for key, item in macro['us'].items() %}
-                    {% set val = item.get('value', item) if item is mapping else item %}
-                    <tr>
-                        <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
-                        <td class="text-right tabular-nums" style="font-weight: 600;">
-                            {{ val }}
-                            {% if 'yield' in key|lower and 'spread' in key|lower and val is number and val < 0 %}
-                            <span style="font-size: 10px; color: var(--loss); margin-left: 4px;">invertiert</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <tbody>
+                        {% for key, item in macro['us'].items() %}
+                        {% set val = item.get('value', item) if item is mapping else item %}
+                        <tr>
+                            <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
+                            <td class="text-right tabular-nums" style="font-weight: 600;">
+                                {{ val }}
+                                {% if 'yield' in key|lower and 'spread' in key|lower and val is number and val < 0 %}
+                                <span style="font-size: 10px; color: var(--loss); margin-left: 4px;">invertiert</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
             <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine US-Makrodaten</div></div>
             {% endif %}
         </div>
         <div id="macro-eu" style="display: none;">
             {% if macro and macro.get('eu') %}
-            <table>
-                <tbody>
-                    {% for key, item in macro['eu'].items() %}
-                    <tr>
-                        <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
-                        <td class="text-right tabular-nums" style="font-weight: 600;">{% if item is mapping %}{{ item.get('value', '–') }}{% else %}{{ item }}{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table>
+                    <tbody>
+                        {% for key, item in macro['eu'].items() %}
+                        <tr>
+                            <td style="font-size: var(--text-base); color: var(--text-secondary);">{{ key|replace('_', ' ')|title }}</td>
+                            <td class="text-right tabular-nums" style="font-weight: 600;">{% if item is mapping %}{{ item.get('value', '–') }}{% else %}{{ item }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
             <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine EU-Makrodaten</div></div>
             {% endif %}
@@ -313,26 +317,28 @@
     <div class="card">
         <div class="card-title">Earnings-Kalender</div>
         {% if calendar and calendar.get('earnings') %}
-        <table>
-            <thead><tr><th>Ticker</th><th>Datum</th><th class="text-right">Tage</th></tr></thead>
-            <tbody>
-                {% for e in calendar['earnings'] %}
-                {% if e is mapping %}
-                <tr>
-                    <td><span class="ticker-badge">{{ e.ticker }}</span></td>
-                    <td class="tabular-nums">{{ e.date[:10] if e.date else '' }}</td>
-                    <td class="text-right">
-                        {% if e.get('days_until') is not none %}
-                        <span class="tabular-nums" style="font-size: var(--text-xs); padding: 2px 6px; border-radius: 4px; {% if e.days_until <= 7 %}background: var(--accent-bg); color: var(--accent); font-weight: 600;{% else %}color: var(--text-muted);{% endif %}">
-                            {{ e.days_until }}d
-                        </span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table class="data-table-stack">
+                <thead><tr><th>Ticker</th><th>Datum</th><th class="text-right">Tage</th></tr></thead>
+                <tbody>
+                    {% for e in calendar['earnings'] %}
+                    {% if e is mapping %}
+                    <tr>
+                        <td class="primary"><span class="ticker-badge">{{ e.ticker }}</span></td>
+                        <td class="tabular-nums" data-label="Datum">{{ e.date[:10] if e.date else '' }}</td>
+                        <td class="text-right" data-label="Tage">
+                            {% if e.get('days_until') is not none %}
+                            <span class="tabular-nums" style="font-size: var(--text-xs); padding: 2px 6px; border-radius: 4px; {% if e.days_until <= 7 %}background: var(--accent-bg); color: var(--accent); font-weight: 600;{% else %}color: var(--text-muted);{% endif %}">
+                                {{ e.days_until }}d
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine anstehenden Earnings</div></div>
         {% endif %}
@@ -341,24 +347,26 @@
     <div class="card">
         <div class="card-title">Makro-Events</div>
         {% if calendar and calendar.get('macro_events') %}
-        <table>
-            <thead><tr><th>Event</th><th>Datum</th><th class="text-right">Tage</th></tr></thead>
-            <tbody>
-                {% for event in calendar['macro_events'] %}
-                {% if event is mapping %}
-                <tr>
-                    <td>{{ event.name }}</td>
-                    <td class="text-muted tabular-nums">{{ event.date[:10] if event.date else '' }}</td>
-                    <td class="text-right">
-                        {% if event.get('days_until') is not none %}
-                        <span class="tabular-nums" style="font-size: var(--text-xs); color: var(--text-muted);">{{ event.days_until }}d</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table class="data-table-stack">
+                <thead><tr><th>Event</th><th>Datum</th><th class="text-right">Tage</th></tr></thead>
+                <tbody>
+                    {% for event in calendar['macro_events'] %}
+                    {% if event is mapping %}
+                    <tr>
+                        <td class="primary">{{ event.name }}</td>
+                        <td class="text-muted tabular-nums" data-label="Datum">{{ event.date[:10] if event.date else '' }}</td>
+                        <td class="text-right" data-label="Tage">
+                            {% if event.get('days_until') is not none %}
+                            <span class="tabular-nums" style="font-size: var(--text-xs); color: var(--text-muted);">{{ event.days_until }}d</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <div class="empty-state-v2"><div class="empty-state-icon">○</div><div class="empty-state-title">Keine Events</div></div>
         {% endif %}
@@ -438,8 +446,10 @@ document.querySelectorAll('.news-tab').forEach(b => b.addEventListener('click', 
         : Object.entries(sectorHeat).map(([k, v]) => ({ x: k, y: typeof v === 'object' ? (v.change_pct || 0) : v }));
     const treeTarget = document.getElementById('sectorTreemap');
     if (treeTarget && treeData.length > 0) {
+        const phone = window.VeloraApex.isPhone();
+        const labelFs = phone ? '9px' : window.VeloraApex.isTablet() ? '10px' : '11px';
         const treeOpts = Object.assign({}, base, {
-            chart: Object.assign({}, base.chart, { type: 'treemap', height: 280 }),
+            chart: Object.assign({}, base.chart, { type: 'treemap', height: window.VeloraApex.chartHeight('md') }),
             series: [{ data: treeData }],
             plotOptions: {
                 treemap: {
@@ -457,10 +467,12 @@ document.querySelectorAll('.news-tab').forEach(b => b.addEventListener('click', 
             },
             dataLabels: {
                 enabled: true,
-                style: { fontSize: '11px', fontFamily: 'Inter', fontWeight: 600 },
+                style: { fontSize: labelFs, fontFamily: 'Inter', fontWeight: 600 },
                 formatter: function(_, opts) {
                     const pt = opts.w.config.series[0].data[opts.dataPointIndex];
-                    return [pt.x, (pt.y >= 0 ? '+' : '') + pt.y.toFixed(2) + '%'];
+                    // Phone: Sektor-Namen kürzen für engere Rechtecke.
+                    const name = phone && typeof pt.x === 'string' && pt.x.length > 12 ? pt.x.slice(0, 11) + '…' : pt.x;
+                    return [name, (pt.y >= 0 ? '+' : '') + pt.y.toFixed(phone ? 1 : 2) + '%'];
                 }
             },
             tooltip: { y: { formatter: v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%' } },

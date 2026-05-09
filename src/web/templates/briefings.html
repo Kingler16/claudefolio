@@ -15,7 +15,7 @@
 </div>
 
 <!-- Top Cards: Market Regime + Key Insights -->
-<div class="charts-grid" style="margin-bottom: 24px;">
+<div class="charts-grid grid-cols-2" style="margin-bottom: 24px;">
     <div class="card">
         <div class="card-title">Aktuelles Markt-Regime</div>
         {% if notes.get('market_regime') %}
@@ -118,7 +118,7 @@
 {% if notes.get('position_theses') %}
 <div class="card" style="margin-top: 24px;">
     <div class="card-title">Investment-Thesen</div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 12px;">
+    <div class="grid grid-cols-2" style="gap: 12px;">
         {% for ticker, thesis in notes['position_theses'].items() %}
         <div style="background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">

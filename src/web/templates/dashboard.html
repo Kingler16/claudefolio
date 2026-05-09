@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+<div class="kpi-grid grid-cols-3">
     <div class="kpi-card">
         <div class="kpi-label">{{ t.dashboard.liquid }}</div>
         <div class="kpi-value tabular-nums">{{ overview.cash_total|eur }}</div>
@@ -68,14 +68,14 @@
     {% endif %}
 </div>
 
-<div class="charts-grid" style="grid-template-columns: repeat(2, 1fr);">
+<div class="charts-grid grid-cols-2">
     <div class="card">
         <div class="card-title">{{ t.dashboard.composition }}</div>
-        <div id="allocationChart" style="height: 340px;"></div>
+        <div id="allocationChart"></div>
     </div>
     <div class="card">
         <div class="card-title">{{ t.dashboard.history }}</div>
-        <div class="chart-container" style="height: 340px;">
+        <div class="chart-container chart-h-md">
             {% if snapshots %}
             <div id="tvChart" style="width: 100%; height: 100%;"></div>
             {% else %}
@@ -162,33 +162,37 @@ if (positions.length > 0 && typeof ApexCharts !== 'undefined' && window.VeloraAp
     const top = sorted.slice(0, 8);
     const rest = sorted.slice(8);
     const restValue = rest.reduce((s,p) => s + p.current_value_eur, 0);
-    const labels = top.map(p => {
+    const rawLabels = top.map(p => {
         if (p.ticker && p.ticker.length <= 6 && !p.ticker.startsWith('AT0')) return p.ticker;
         return p.name.length > 22 ? p.name.substring(0,20) + '…' : p.name;
     });
     const values = top.map(p => p.current_value_eur);
-    if (restValue > 0) { labels.push((LANG === 'en' ? 'Other (' : 'Sonstige (') + rest.length + ')'); values.push(restValue); }
+    if (restValue > 0) { rawLabels.push((LANG === 'en' ? 'Other (' : 'Sonstige (') + rest.length + ')'); values.push(restValue); }
+    const labels = window.VeloraApex.truncateLabels(rawLabels);
     const base = window.VeloraApex.baseOptions();
+    const dd = window.VeloraApex.donutDefaults();
+    const phone = window.VeloraApex.isPhone();
     const options = Object.assign({}, base, {
-        chart: Object.assign({}, base.chart, { type: 'donut', height: 340 }),
+        chart: Object.assign({}, base.chart, { type: 'donut', height: window.VeloraApex.chartHeight('md') }),
         series: values,
         labels: labels,
         stroke: { colors: [VeloraChartTheme.bodyBg()], width: 2 },
         plotOptions: {
             pie: {
                 donut: {
-                    size: '65%',
+                    size: dd.plotOptions.pie.donut.size,
                     labels: {
                         show: true,
-                        name: { show: true, fontSize: '12px', color: VeloraChartTheme.textMuted() },
-                        value: { show: true, fontSize: '18px', fontFamily: 'Inter', fontWeight: 700, color: VeloraChartTheme.textPrimary(), formatter: v => Number(v).toLocaleString(LOCALE,{minimumFractionDigits:0,maximumFractionDigits:0}) + '€' },
+                        name: { show: true, fontSize: phone ? '11px' : '12px', color: VeloraChartTheme.textMuted() },
+                        value: { show: true, fontSize: phone ? '15px' : '18px', fontFamily: 'Inter', fontWeight: 700, color: VeloraChartTheme.textPrimary(), formatter: v => Number(v).toLocaleString(LOCALE,{minimumFractionDigits:0,maximumFractionDigits:0}) + '€' },
                         total: { show: true, label: DONUT_TOTAL_LABEL, formatter: () => holdingsValueEur.toLocaleString(LOCALE,{minimumFractionDigits:0,maximumFractionDigits:0}) + '€' }
                     }
                 },
-                expandOnClick: true,
+                expandOnClick: dd.plotOptions.pie.expandOnClick,
             }
         },
-        legend: Object.assign({}, base.legend, { position: 'bottom', horizontalAlign: 'center', fontSize: '11px', markers: { width: 8, height: 8 }, itemMargin: { horizontal: 8, vertical: 3 } }),
+        dataLabels: dd.dataLabels,
+        legend: Object.assign({}, base.legend, { position: 'bottom', horizontalAlign: 'center' }),
         tooltip: Object.assign({}, base.tooltip, {
             y: { formatter: v => v.toLocaleString(LOCALE,{minimumFractionDigits:0,maximumFractionDigits:0}) + '€' }
         }),

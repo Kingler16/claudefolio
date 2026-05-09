@@ -254,7 +254,7 @@ select.input {
   display: flex;
   flex-direction: column-reverse;
   gap: 10px;
-  max-width: 380px;
+  max-width: min(380px, calc(100vw - 32px));
   pointer-events: none;
 }
 

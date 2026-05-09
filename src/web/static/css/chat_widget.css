@@ -36,7 +36,7 @@
     position: fixed;
     right: 22px;
     bottom: 88px;
-    width: 420px;
+    width: min(420px, calc(100vw - 44px));
     height: min(640px, calc(100vh - 120px));
     background: var(--glass-bg-strong);
     backdrop-filter: blur(28px) saturate(180%);

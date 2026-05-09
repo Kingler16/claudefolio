@@ -1,34 +1,27 @@
-/* Velora — Mobile Component-Level-Overrides (<768px)
+/* Velora — Phone-Layer (<768px)
  *
- * Touch-Targets auf 44px, Toast-Position, Chat Full-Screen, Holdings-Table
- * als Stacked-Card-List, Chat-Widget aus.
+ * Setzt Touch-Targets, kompaktere Spacing, Tabellen-Stacking, Chat-Layout,
+ * Hero-Stacking, ApexCharts-Legend-Density. Inline-Style-Overrides aus
+ * früheren Versionen sind raus — Templates nutzen jetzt .grid-cols-N und
+ * chart-theme.js setzt Heights via JS.
  */
 
 @media (max-width: 767.98px) {
 
-    /* ─── Touch-Targets ≥ 44px ──────────────────────────── */
+    /* ─── Touch-Targets ≥ 44px ──────────────────────────────────────── */
 
-    .btn {
-        padding: 12px 16px;
-        min-height: 44px;
-        font-size: 14px;
-    }
-    .btn-sm {
-        padding: 10px 14px;
-        min-height: 40px;
-    }
-    .btn-lg {
-        padding: 14px 20px;
-        min-height: 48px;
-    }
+    .btn        { padding: 12px 16px; min-height: 44px; font-size: 14px; }
+    .btn-sm     { padding: 10px 14px; min-height: 40px; }
+    .btn-lg     { padding: 14px 20px; min-height: 48px; }
 
     input.input,
     select.input,
     textarea.input,
-    .input {
+    .input,
+    .field-input {
         padding: 12px 14px;
         min-height: 44px;
-        font-size: 16px;  /* verhindert iOS-Auto-Zoom beim Fokus */
+        font-size: 16px;          /* iOS: 16px+ verhindert Auto-Zoom beim Fokus */
     }
 
     .sidebar-nav a {
@@ -37,31 +30,45 @@
         font-size: 15px;
     }
 
+    /* Form-Labels: 13px statt 10-12px — auf Phone besser lesbar. */
+    .field-label,
+    label.input-label {
+        font-size: 13px;
+    }
+
     /* ─── Toast: oben statt unten-rechts (Home-Indicator + Dynamic Island frei) ── */
 
     .toast-stack {
         bottom: auto;
-        right: auto;
+        right: max(12px, calc(var(--safe-right) + 4px));
         top: max(12px, calc(var(--safe-top) + 8px));
         left: max(12px, calc(var(--safe-left) + 4px));
-        right: max(12px, calc(var(--safe-right) + 4px));
         align-items: stretch;
     }
-    .toast {
-        min-height: 48px;
-    }
+    .toast { min-height: 48px; }
 
-    /* ─── Holdings-/Generic-Tables → stacked Cards ──────── */
-
+    /* ─── Tabellen-Stacking: .holdings-table + .data-table-stack ──────
+     * Tabellen werden zu Card-Listen umformatiert. <td data-label="…">
+     * zeigt das Spalten-Label vor dem Wert. <td class="primary"> ist die
+     * Hervorhebungs-Zeile (i.d.R. Name/Ticker, ohne Label, mit Border).
+     */
     .holdings-table,
     .holdings-table thead,
     .holdings-table tbody,
     .holdings-table tr,
-    .holdings-table td {
+    .holdings-table td,
+    .data-table-stack,
+    .data-table-stack thead,
+    .data-table-stack tbody,
+    .data-table-stack tr,
+    .data-table-stack td {
         display: block;
     }
-    .holdings-table thead { display: none; }
-    .holdings-table tr {
+    .holdings-table thead,
+    .data-table-stack thead { display: none; }
+
+    .holdings-table tr,
+    .data-table-stack tr {
         padding: 12px;
         margin-bottom: 8px;
         background: var(--glass-bg);
@@ -69,15 +76,18 @@
         border-radius: var(--radius-md);
         position: relative;
     }
-    .holdings-table td {
+    .holdings-table td,
+    .data-table-stack td {
         padding: 4px 0;
         white-space: normal;
         display: flex;
         justify-content: space-between;
         gap: 12px;
         font-size: 13px;
+        text-align: left;     /* Override für text-right-Spalten */
     }
-    .holdings-table td[data-label]::before {
+    .holdings-table td[data-label]::before,
+    .data-table-stack td[data-label]::before {
         content: attr(data-label);
         color: var(--text-muted);
         text-transform: uppercase;
@@ -86,22 +96,26 @@
         font-weight: 600;
         min-width: 80px;
     }
-    /* Erste Zeile — meist Ticker — größer und ohne Label */
-    .holdings-table td.primary {
+    .holdings-table td.primary,
+    .data-table-stack td.primary {
         font-size: 15px;
         font-weight: 700;
         padding-bottom: 8px;
         margin-bottom: 4px;
         border-bottom: 1px solid var(--glass-border);
+        display: block;        /* Primary darf full-width sein, kein flex */
     }
-    .holdings-table td.primary::before {
-        display: none;
+    .holdings-table td.primary::before,
+    .data-table-stack td.primary::before { display: none; }
+
+    /* Summary-Zeile (z.B. "Gesamt Cash") — etwas akzentuiert. */
+    .data-table-stack tr.data-table-summary {
+        background: var(--glass-bg-strong);
+        border-color: var(--glass-border-strong);
     }
 
-    /* Fallback: generische Tables bleiben scrollbar, aber mit sichtbarem Hinweis */
-    .table-wrapper {
-        position: relative;
-    }
+    /* Generic Tables ohne Stacking-Klasse: Hint, dass man scrollen kann. */
+    .table-wrapper { position: relative; }
     .table-wrapper::after {
         content: "← wischen →";
         position: absolute;
@@ -113,8 +127,11 @@
         text-transform: uppercase;
         opacity: 0.6;
     }
+    /* Bei Stacking-Tabellen ist der Hinweis irrelevant. */
+    .table-wrapper:has(.data-table-stack)::after,
+    .table-wrapper:has(.holdings-table)::after { content: none; }
 
-    /* ─── Index-Bar: vertikales Wrap statt horizontal scroll ─── */
+    /* ─── Index-Bar: wraps statt horizontal scroll ─────────────────── */
 
     .index-bar {
         flex-wrap: wrap;
@@ -123,20 +140,17 @@
         gap: 14px var(--space-3);
         border-bottom: 1px solid var(--glass-border);
         padding-bottom: var(--space-3);
+        margin-bottom: 10px;
     }
-    .index-item {
-        flex: 1 0 calc(50% - 14px);
-    }
+    .index-item { flex: 1 0 calc(50% - 14px); }
 
-    /* ─── Chat Full-Page mobile ─────────────────────────── */
+    /* ─── Chat Full-Page mobile ──────────────────────────────────── */
 
     .chat-layout {
         grid-template-columns: 1fr;
         height: calc(100dvh - var(--safe-top) - var(--bottom-nav-h) - var(--safe-bottom));
     }
-    .chat-sidebar {
-        display: none;
-    }
+    .chat-sidebar { display: none; }
     .chat-sidebar.mobile-open {
         display: flex;
         position: fixed;
@@ -151,52 +165,44 @@
         padding-top: calc(var(--safe-top) + var(--space-3));
         padding-bottom: calc(var(--safe-bottom) + var(--space-3));
     }
-    .chat-main {
-        height: 100%;
-    }
-    .chat-messages {
-        padding: 14px 12px;
-    }
-    .msg {
-        max-width: 90%;
-    }
+    .chat-main { height: 100%; }
+    .chat-messages { padding: 14px 12px; }
+    .msg { max-width: 90%; }
     .chat-input-wrap {
-        padding: 10px 12px
-                 max(12px, calc(var(--safe-bottom) + 8px))
-                 12px;
+        padding: 10px 12px max(12px, calc(var(--safe-bottom) + 8px)) 12px;
     }
-    .chat-send-btn {
-        width: 44px;
-        height: 44px;
-    }
-    .chat-thread-item {
-        padding: 14px 12px;
-        min-height: 52px;
-    }
+    .chat-send-btn { width: 44px; height: 44px; }
+    .chat-thread-item { padding: 14px 12px; min-height: 52px; }
 
-    /* ─── Chat-Widget aus — auf Mobile geht's über Bottom-Nav-Tab "Chat" ─── */
-
+    /* Chat-Widget aus — auf Phone gibt's den Bottom-Nav-Tab "Chat". */
     .velora-widget-toggle,
-    .velora-widget-panel {
-        display: none !important;
-    }
+    .velora-widget-panel { display: none !important; }
 
-    /* ─── Typografie-Scale etwas kleiner ────────────────── */
+    /* ─── Typografie-Scale auf Phone ─────────────────────────────── */
 
-    .kpi-hero-value {
-        font-size: 32px;
-    }
-    .page-title {
-        font-size: 22px;
-    }
-    .kpi-value {
-        font-size: 20px;
-    }
-    .hero-greeting {
-        font-size: 20px;
-    }
+    .page-title       { font-size: 20px; margin-bottom: 0; }
+    .page-subtitle    { font-size: 10px; }
+    .hero-greeting    { font-size: 15px; margin-bottom: 8px; }
+    .kpi-hero-value   { font-size: 26px; line-height: 1.1; }
+    .kpi-card .kpi-value { font-size: 17px; }
+    .card-title       { font-size: 11px; margin-bottom: 10px; }
 
-    /* ─── Modal nutzt mehr Breite ───────────────────────── */
+    /* ─── KPI-Hero stacked, nicht side-by-side ──────────────────── */
+
+    .kpi-hero {
+        grid-template-columns: 1fr;
+        padding: 16px 18px;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    .kpi-hero-spark {
+        text-align: left;
+        min-width: 0;
+        opacity: 0.7;
+    }
+    .kpi-hero-label { margin-bottom: 2px; }
+
+    /* ─── Modals nutzen mehr Breite ─────────────────────────────── */
 
     .modal-overlay > * {
         max-width: 95vw;
@@ -204,151 +210,37 @@
         overflow-y: auto;
     }
 
-    /* ─── Page-Header wird einspaltig (main.css hat's schon, hier feintunen) ── */
+    /* ─── Page-Header einspaltig (main.css macht's schon, hier feintunen) ── */
 
     .page-header {
         gap: var(--space-2);
-        margin-bottom: 12px !important;
+        margin-bottom: 12px;
     }
 
-    /* ─── Override inline grid-template-columns in Templates ─────────────
-       dashboard/portfolio/analysis setzen per Inline-Style 3er- oder 4er-
-       Grids, die auf Mobile unlesbar wären. Mit [style*="grid-template"]
-       + !important gewinnt mobile.css gegen die Inline-Regel. */
+    /* ─── Cards kompakter ───────────────────────────────────────── */
 
-    .kpi-grid,
-    .kpi-grid[style*="grid-template-columns"] {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-        margin-bottom: 10px !important;
-    }
+    .card     { padding: 14px; border-radius: var(--radius-md); }
+    .kpi-card { padding: 10px 12px; }
 
-    .charts-grid,
-    .charts-grid[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-        margin-bottom: 10px !important;
-    }
+    /* ─── ApexCharts: Legend kompakter ──────────────────────────── */
 
-    /* Analysis hat 4er- und 3er-Grids via inline-style */
-    [style*="grid-template-columns: repeat(4, 1fr)"] {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    [style*="grid-template-columns: repeat(3, 1fr)"] {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
+    .apexcharts-legend            { font-size: 10px; margin-top: 4px; }
+    .apexcharts-legend-text       { font-size: 10px; padding-left: 4px; }
+    .apexcharts-legend-marker     { width: 8px; height: 8px; margin-right: 4px; }
 
-    /* ─── KPI-Hero wird stacked, nicht side-by-side ────────────────────── */
+    /* ─── Refresh-Button kompakter ──────────────────────────────── */
 
-    .kpi-hero {
-        grid-template-columns: 1fr !important;
-        padding: 16px 18px !important;
-        gap: 6px !important;
-        margin-bottom: 10px !important;
-    }
-    .kpi-hero-value {
-        font-size: 26px !important;
-        line-height: 1.1 !important;
-    }
-    .kpi-hero-spark {
-        text-align: left !important;
-        min-width: 0 !important;
-        opacity: 0.7;
-    }
-    .kpi-hero-label {
-        margin-bottom: 2px !important;
-    }
-
-    /* Hero-Greeting: knapp halten */
-    .hero-greeting {
-        font-size: 15px !important;
-        margin-bottom: 8px !important;
-    }
-
-    /* ─── Cards kompakter ───────────────────────────────────────────────── */
-
-    .card {
-        padding: 14px !important;
-        border-radius: var(--radius-md) !important;
-    }
-    .kpi-card {
-        padding: 10px 12px !important;
-    }
-    .kpi-card .kpi-value {
-        font-size: 17px !important;
-    }
-    .card-title {
-        margin-bottom: 10px !important;
-        font-size: 11px !important;
-    }
-
-    /* ─── Chart-Heights: fest gesetzte Inline-Heights auf Mobile kleiner ─ */
-
-    #allocationChart { height: 240px !important; }
-    #tvChart         { height: 200px !important; }
-    .chart-container[style*="height: 340"],
-    .chart-container[style*="height: 320"],
-    .chart-container[style*="height: 300"] { height: 210px !important; }
-    #regionChart, #sectorChart   { height: 200px !important; }
-    #sectorPie, #regionPie, #accountPie { height: 190px !important; }
-    #perfRangeChart  { height: 280px !important; }
-    #heatmapChart    { min-height: 180px !important; }
-
-    /* ApexCharts legend kompakter */
-    .apexcharts-legend {
-        font-size: 10px !important;
-        margin-top: 4px !important;
-    }
-    .apexcharts-legend-text {
-        font-size: 10px !important;
-        padding-left: 4px !important;
-    }
-    .apexcharts-legend-marker {
-        width: 8px !important;
-        height: 8px !important;
-        margin-right: 4px !important;
-    }
-
-    /* ─── Index-Bar: etwas enger ───────────────────────────────────────── */
-
-    .index-bar {
-        margin-bottom: 10px !important;
-        padding: 6px 0 !important;
-        gap: 10px !important;
-    }
-
-    /* ─── Inter-Card spacing auf Mobile dramatisch reduzieren ────────── */
-
-    .card[style*="margin-top: var(--space-5)"],
-    .card[style*="margin-top: var(--space-4)"],
-    div[style*="margin-bottom: var(--space-5)"],
-    div[style*="margin-bottom: var(--space-4)"] {
-        margin-top: 10px !important;
-        margin-bottom: 10px !important;
-    }
-
-    /* ─── Cache-Status-Header klein halten ─────────────────────────────── */
-
-    .page-subtitle { font-size: 10px !important; }
-    .page-title    { font-size: 20px !important; margin-bottom: 0 !important; }
-
-    /* ─── Refresh-Button kompakt ──────────────────────────────────────── */
-
-    #refresh-btn {
-        padding: 10px 14px !important;
-        font-size: 12px !important;
-    }
+    #refresh-btn { padding: 10px 14px; font-size: 12px; }
 }
 
+/* ─── Ultra-narrow Phones (iPhone SE, 13 mini) ─────────────────── */
 @media (max-width: 480px) {
-    /* Ganz schmale iPhones (SE, 13 mini) → alle Grids 1-spaltig */
-    .kpi-grid,
-    .kpi-grid[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
+    /* Alle Utility-Grids auf 1-spaltig (statt 2) */
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
     }
-    [style*="grid-template-columns: repeat(4, 1fr)"],
-    [style*="grid-template-columns: repeat(3, 1fr)"] {
-        grid-template-columns: 1fr !important;
-    }
-    .kpi-hero-value { font-size: 24px !important; }
+    .kpi-grid { grid-template-columns: 1fr; }
+    .kpi-hero-value { font-size: 24px; }
 }

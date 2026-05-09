@@ -271,7 +271,7 @@ td.negative::before, span.negative::before, div.negative::before { content: "▼
 
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
     gap: var(--space-4);
     margin-bottom: var(--space-5);
 }
@@ -368,7 +368,7 @@ tbody td {
 
 .account-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
     gap: 14px;
 }
 

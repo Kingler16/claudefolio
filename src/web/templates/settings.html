@@ -127,7 +127,7 @@
 <!-- Telegram -->
 <div class="card" style="margin-bottom: 16px;">
     <div class="card-title">Telegram Bot</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div class="grid grid-cols-2" style="gap: 12px;">
         <div>
             <label class="field-label">Bot Token</label>
             <div class="secret-field">
@@ -213,11 +213,11 @@
 <!-- Web Dashboard -->
 <div class="card" style="margin-bottom: 16px;">
     <div class="card-title">Web Dashboard</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div class="grid grid-cols-2" style="gap: 12px;">
         <div>
             <label class="field-label">Port</label>
             <input type="number" name="web_port" value="{{ settings.get('web', {}).get('port', 8080) }}"
-                   class="field-input">
+                   class="field-input" inputmode="numeric">
         </div>
         <div>
             <label class="field-label">Daten-Cache Status</label>
@@ -317,13 +317,13 @@
     background: var(--accent-bg) !important;
 }
 
-/* Settings-Tabs */
+/* Settings-Tabs: Phone wraps in 2 Reihen statt horizontal scroll */
 .settings-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     margin-bottom: var(--space-5);
     border-bottom: 1px solid var(--glass-border);
-    overflow-x: auto;
 }
 .settings-tab-btn {
     padding: 10px 16px;
@@ -338,6 +338,7 @@
     margin-bottom: -1px;
     transition: all var(--dur-fast) var(--ease-apple);
     white-space: nowrap;
+    min-height: 44px;
 }
 .settings-tab-btn:hover { color: var(--text-primary); }
 .settings-tab-btn.active {

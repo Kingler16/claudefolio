@@ -1,4 +1,4 @@
-/* Velora chart theme: live CSS-token readers + palette for Chart.js / ApexCharts / TradingView. */
+/* Velora chart theme: live CSS-token readers + responsive helpers + Apex defaults. */
 (function() {
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const isDark = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -21,12 +21,27 @@
     yellow:      () => css('--warn'),
   };
 
-  const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches;
+  // Drei Stufen, identisch zur CSS-Breakpoint-Logik in responsive.css.
+  const isPhone   = () => window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches;
+  const isTablet  = () => window.matchMedia && window.matchMedia('(min-width: 768px) and (max-width: 1023.98px)').matches;
+  const isDesktop = () => window.matchMedia && window.matchMedia('(min-width: 1024px)').matches;
+  const screenSize = () => isPhone() ? 'phone' : isTablet() ? 'tablet' : 'desktop';
+
+  // Chart-Heights synchron zu .chart-h-{sm,md,lg} in responsive.css.
+  // Gut, dass JS (ApexCharts.chart.height) und CSS-Klassen denselben Wert liefern.
+  const HEIGHTS = {
+    sm: { phone: 200, tablet: 240, desktop: 260 },
+    md: { phone: 240, tablet: 300, desktop: 340 },
+    lg: { phone: 280, tablet: 360, desktop: 420 },
+  };
+  const chartHeight = (size) => (HEIGHTS[size] || HEIGHTS.md)[screenSize()];
 
   window.VeloraApex = {
     baseOptions() {
       const dark = isDark();
-      const mobile = isMobile();
+      const phone = isPhone();
+      const tablet = isTablet();
+      const compact = phone || tablet;
       return {
         chart: {
           foreColor: window.VeloraChartTheme.text(),
@@ -34,14 +49,14 @@
           fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
           background: 'transparent',
           width: '100%',
-          // Mobile: Animationen reduzieren (weniger GPU-Last, schnelleres Initial-Paint)
-          animations: mobile ? {
+          // Mobile/Tablet: Animationen reduzieren (weniger GPU-Last, schnelleres Initial-Paint).
+          animations: phone ? {
             enabled: false,
           } : {
             enabled: true,
             easing: 'easeout',
-            speed: 600,
-            animateGradually: { enabled: true, delay: 80 },
+            speed: tablet ? 400 : 600,
+            animateGradually: { enabled: !tablet, delay: 80 },
           },
           redrawOnWindowResize: true,
           redrawOnParentResize: true,
@@ -51,11 +66,13 @@
           borderColor: window.VeloraChartTheme.grid(),
           strokeDashArray: 4,
           xaxis: { lines: { show: false } },
-          padding: mobile ? { left: 4, right: 4, top: 0, bottom: 0 } : undefined,
+          padding: phone ? { left: 4, right: 4, top: 0, bottom: 0 }
+                  : tablet ? { left: 8, right: 8, top: 0, bottom: 0 }
+                  : undefined,
         },
         tooltip: {
           theme: dark ? 'dark' : 'light',
-          style: { fontSize: mobile ? '11px' : '12px', fontFamily: 'Inter' },
+          style: { fontSize: phone ? '11px' : '12px', fontFamily: 'Inter' },
           marker: { show: true },
         },
         colors: window.VeloraChartTheme.colors,
@@ -63,21 +80,66 @@
         legend: {
           labels: { colors: window.VeloraChartTheme.text() },
           fontFamily: 'Inter',
-          fontSize: mobile ? '10px' : '12px',
-          markers: { width: mobile ? 8 : 10, height: mobile ? 8 : 10 },
-          itemMargin: mobile ? { horizontal: 6, vertical: 2 } : undefined,
+          fontSize: phone ? '10px' : tablet ? '11px' : '12px',
+          markers: { width: phone ? 8 : 10, height: phone ? 8 : 10 },
+          itemMargin: compact ? { horizontal: 6, vertical: 2 } : undefined,
+          position: phone ? 'bottom' : undefined,
         },
-        stroke: { curve: 'smooth', width: 2 },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            chart: { height: 200 },
-            legend: { fontSize: '9px', position: 'bottom' },
-            plotOptions: { pie: { donut: { size: '60%' } } },
+        stroke: {
+          // Phone: gerade Linien (CPU-schonender, schärfer auf 375px).
+          curve: phone ? 'straight' : 'smooth',
+          width: 2,
+        },
+        // Mehrstufige Responsive-Konfiguration. Wirkt zusätzlich zu den isPhone()-
+        // Defaults oben, falls Chart auf eigene Breakpoints zugeschnitten ist.
+        responsive: [
+          {
+            breakpoint: 1024,
+            options: {
+              legend: { fontSize: '11px' },
+            },
           },
-        }],
+          {
+            breakpoint: 768,
+            options: {
+              chart: { height: 240 },
+              stroke: { curve: 'straight' },
+              legend: { fontSize: '10px', position: 'bottom', markers: { width: 8, height: 8 } },
+              plotOptions: { pie: { donut: { size: '60%' }, expandOnClick: false } },
+            },
+          },
+        ],
       };
     },
-    isMobile,
+    // Donut-/Pie-Defaults: Phone zeigt dataLabels (sonst keine % sichtbar),
+    // expandOnClick auf Phone deaktiviert (Touch-Tap-Konflikt).
+    donutDefaults() {
+      const phone = isPhone();
+      return {
+        plotOptions: {
+          pie: {
+            donut: { size: phone ? '58%' : '65%' },
+            expandOnClick: !phone,
+          },
+        },
+        dataLabels: {
+          enabled: phone,
+          style: { fontSize: phone ? '10px' : '11px', fontFamily: 'Inter', fontWeight: 600 },
+          dropShadow: { enabled: false },
+        },
+      };
+    },
+    // Labels auf Phone kürzen (Donut-Legenden bleiben so lesbar).
+    truncateLabels(labels, max) {
+      if (!isPhone()) return labels;
+      const limit = max || 18;
+      return labels.map(l => (typeof l === 'string' && l.length > limit) ? l.slice(0, limit - 1) + '…' : l);
+    },
+    chartHeight,
+    screenSize,
+    isMobile: isPhone,    // Backwards-compat alias
+    isPhone,
+    isTablet,
+    isDesktop,
   };
 })();

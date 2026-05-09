@@ -1,8 +1,12 @@
-/* Velora — Responsive Tokens + Mobile-First-Layout-Inversion
+/* Velora — Responsive Tokens, Utility-Klassen & Mobile-First-Layout-Inversion
  *
- * Grund-Layout (main.css) ist Desktop-First.  Diese Datei kippt das auf Mobile:
- * Sidebar wird zu einem Off-Canvas-Drawer, Main-Content bekommt Safe-Area-Padding,
- * Bottom-Nav ist fixed unten.  Ab 768px springt alles zurück zum Desktop-Layout.
+ * Drei Breakpoints:
+ *   Phone   : bis 767.98px  (Bottom-Nav, Stacking, kompakt)
+ *   Tablet  : 768-1023.98px (Sidebar, Charts 2-spaltig, Hero side-by-side)
+ *   Desktop : ab 1024px     (Charts 3-4-spaltig, voller Komfort)
+ *
+ * Diese Datei wird NACH main.css geladen — Utility-Klassen gewinnen damit
+ * gegen die Defaults in main.css (gleiche Spezifität, last-rule-wins).
  */
 
 :root {
@@ -11,6 +15,42 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left:   env(safe-area-inset-left, 0px);
     --bottom-nav-h: 60px;
+}
+
+/* ─── Utility-Klassen: Grid-Spalten (Mobile-First) ─────────────────
+ * Nutzung: <div class="kpi-grid grid-cols-3"> oder <div class="charts-grid grid-cols-2">
+ * Phone: alle 1-spaltig.  Tablet: 2-spaltig.  Desktop: voll (3 oder 4).
+ */
+.grid-cols-2,
+.grid-cols-3,
+.grid-cols-4 {
+    grid-template-columns: 1fr;
+}
+
+/* Generic grid container (für Templates ohne .kpi-grid/.charts-grid) */
+.grid {
+    display: grid;
+    gap: var(--space-3);
+}
+
+/* ─── Utility-Klassen: Chart-Container-Heights (Mobile-First) ───── */
+.chart-h-sm { height: 200px; }
+.chart-h-md { height: 240px; }
+.chart-h-lg { height: 280px; }
+
+/* ─── Utility-Klassen: Sichtbarkeit ───────────────────────────────
+ * Phone-Default = sichtbar; .hide-on-phone versteckt unter 768px.
+ * .hide-on-tablet versteckt im 768-1023px-Bereich.
+ * .hide-on-desktop versteckt ab 1024px.
+ */
+@media (max-width: 767.98px) {
+    .hide-on-phone { display: none !important; }
+}
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    .hide-on-tablet { display: none !important; }
+}
+@media (min-width: 1024px) {
+    .hide-on-desktop { display: none !important; }
 }
 
 @media (max-width: 767.98px) {
@@ -99,4 +139,52 @@
             env(keyboard-inset-height, 0px)
         );
     }
+}
+
+/* ─── Tablet-Layer (768-1023.98px) ────────────────────────────────
+ * Sidebar bleibt sichtbar (statt Bottom-Nav), Charts 2-spaltig,
+ * Hero side-by-side, Cards moderat. KPI-Grids via .grid-cols-N
+ * werden 2-spaltig (s.u. min-width: 768px Block).
+ */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+    /* Sidebar moderat schmal, Bottom-Nav aus */
+    .sidebar { width: 200px; }
+    .main-content { margin-left: 200px; padding: var(--space-4) var(--space-5); }
+    .bottom-nav { display: none; }
+
+    /* Mobile-Toggle aus (Sidebar permanent sichtbar) */
+    .mobile-toggle { display: none; }
+
+    /* Charts: 2-spaltig statt 3 */
+    .charts-grid { grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); }
+
+    /* KPI-Grid: auf Tablet bleibt auto-fit, aber engere min */
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); }
+
+    /* Hero side-by-side (wie Desktop) */
+    .kpi-hero { grid-template-columns: 1fr auto; }
+
+    /* Cards moderat */
+    .card { padding: 18px; }
+    .kpi-hero-value { font-size: 32px; }
+}
+
+/* ─── Tablet+: Utility-Klassen für Grid-Spalten ──────────────────── */
+@media (min-width: 768px) {
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .chart-h-sm { height: 240px; }
+    .chart-h-md { height: 300px; }
+    .chart-h-lg { height: 360px; }
+}
+
+/* ─── Desktop: Utility-Klassen entfalten volle Spaltenzahl ──────── */
+@media (min-width: 1024px) {
+    .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .chart-h-md { height: 340px; }
+    .chart-h-lg { height: 420px; }
 }

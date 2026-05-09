@@ -43,8 +43,8 @@
                 <button type="button" class="trade-action-btn active" data-action="buy">KAUFEN</button>
                 <button type="button" class="trade-action-btn" data-action="sell">VERKAUFEN</button>
             </div>
-            <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px;">Ticker</label>
-            <input type="text" id="tradeTicker" class="input" placeholder="z.B. AAPL, ASML.AS" list="tickerList" autocomplete="off">
+            <label class="field-label" style="display:block; margin-bottom:4px;">Ticker</label>
+            <input type="text" id="tradeTicker" class="input" placeholder="z.B. AAPL, ASML.AS" list="tickerList" autocomplete="off" inputmode="text">
             <datalist id="tickerList">
                 {% for pos in overview.positions %}
                 <option value="{{ pos.ticker }}">{{ pos.name }}</option>
@@ -59,12 +59,12 @@
             <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 12px;">Du <span id="tradeActionWord">kaufst</span>: <strong id="tradeTickerDisplay" style="color: var(--text-primary);">—</strong></div>
             <div style="display:flex; gap:10px; margin-bottom:12px;">
                 <div style="flex:1;">
-                    <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px;">Stueck</label>
-                    <input type="number" id="tradeShares" class="input" step="0.01" min="0.01" placeholder="10.00">
+                    <label class="field-label" style="display:block; margin-bottom:4px;">Stueck</label>
+                    <input type="number" id="tradeShares" class="input" step="0.01" min="0.01" placeholder="10.00" inputmode="decimal">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px;">Preis (<span id="tradePriceCur">{{ default_currency if default_currency != 'mixed' else 'EUR' }}</span>)</label>
-                    <input type="number" id="tradePrice" class="input" step="0.01" min="0.01" placeholder="150.00">
+                    <label class="field-label" style="display:block; margin-bottom:4px;">Preis (<span id="tradePriceCur">{{ default_currency if default_currency != 'mixed' else 'EUR' }}</span>)</label>
+                    <input type="number" id="tradePrice" class="input" step="0.01" min="0.01" placeholder="150.00" inputmode="decimal">
                 </div>
             </div>
             {% if default_currency == 'mixed' %}
@@ -82,7 +82,7 @@
             <input type="hidden" name="trade_currency" value="{{ default_currency }}">
             {% endif %}
             <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom:12px;">Total: <strong id="tradeTotal" class="tabular-nums" style="color: var(--text-primary);">—</strong></div>
-            <label style="font-size: var(--text-xs); color: var(--text-muted); display:block; margin-bottom:4px;">Konto</label>
+            <label class="field-label" style="display:block; margin-bottom:4px;">Konto</label>
             <select id="tradeAccount" class="input">
                 {% for acc_name, acc_data in overview.accounts_grouped.items() %}
                 <option value="{{ acc_name }}">{{ acc_data.display_name }}</option>
@@ -113,7 +113,9 @@
 </div>
 
 <style>
-.trade-dot { display: inline-block; width: 28px; height: 4px; border-radius: 2px; background: var(--glass-border); transition: background var(--dur-fast) var(--ease-apple); }
+/* Step-Dots: visuell schmal, aber Touch-Target via Pseudo-Element auf 32px hoch — verhindert Mistaps. */
+.trade-dot { display: inline-block; width: 28px; height: 4px; border-radius: 2px; background: var(--glass-border); transition: background var(--dur-fast) var(--ease-apple); position: relative; }
+.trade-dot::before { content: ''; position: absolute; inset: -14px -2px; }
 .trade-dot.active { background: var(--accent); }
 .trade-action-btn { padding: 14px 8px; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.5px; color: var(--text-secondary); cursor: pointer; transition: all var(--dur-fast) var(--ease-apple); }
 .trade-action-btn:hover { background: var(--glass-bg-strong); color: var(--text-primary); }
@@ -123,14 +125,14 @@
 .account-card summary::marker { content: ''; }
 </style>
 
-<div class="charts-grid" style="margin-bottom: 24px;">
+<div class="charts-grid grid-cols-2" style="margin-bottom: 24px;">
     <div class="card">
         <div class="card-title">Region-Exposure</div>
-        <div id="regionChart" style="height: 280px;"></div>
+        <div id="regionChart"></div>
     </div>
     <div class="card">
         <div class="card-title">Sektor-Aufteilung</div>
-        <div id="sectorChart" style="height: 280px;"></div>
+        <div id="sectorChart"></div>
     </div>
 </div>
 
@@ -170,40 +172,42 @@
 {% if overview.bank_accounts %}
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-title">Bankkonten</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Konto</th>
-                <th>Bank</th>
-                <th class="text-right">Wert</th>
-                <th class="text-right">Zinssatz</th>
-                <th>Typ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for acc in overview.bank_accounts %}
-            <tr>
-                <td>{{ acc.name }}</td>
-                <td class="text-muted">{{ acc.bank }}</td>
-                <td class="text-right tabular-nums" style="font-weight: 600;">{{ acc.value|eur }}</td>
-                <td class="text-right text-accent tabular-nums">{{ acc.interest }}%</td>
-                <td>
-                    {% if acc.is_depot_cash %}
-                    <span class="rec-status open">Depot-Cash</span>
-                    {% else %}
-                    <span class="rec-status target_hit">Frei verfügbar</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-            <tr style="border-top: 2px solid var(--border);">
-                <td colspan="2" style="font-weight: 600;">Gesamt Cash</td>
-                <td class="text-right tabular-nums" style="font-weight: 700; font-size: 15px;">{{ overview.cash_total|eur }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+        <table class="data-table-stack">
+            <thead>
+                <tr>
+                    <th>Konto</th>
+                    <th>Bank</th>
+                    <th class="text-right">Wert</th>
+                    <th class="text-right">Zinssatz</th>
+                    <th>Typ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in overview.bank_accounts %}
+                <tr>
+                    <td class="primary">{{ acc.name }}</td>
+                    <td class="text-muted" data-label="Bank">{{ acc.bank }}</td>
+                    <td class="text-right tabular-nums" data-label="Wert" style="font-weight: 600;">{{ acc.value|eur }}</td>
+                    <td class="text-right text-accent tabular-nums" data-label="Zinssatz">{{ acc.interest }}%</td>
+                    <td data-label="Typ">
+                        {% if acc.is_depot_cash %}
+                        <span class="rec-status open">Depot-Cash</span>
+                        {% else %}
+                        <span class="rec-status target_hit">Frei verfügbar</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr class="data-table-summary" style="border-top: 2px solid var(--border);">
+                    <td class="primary" colspan="2" style="font-weight: 600;">Gesamt Cash</td>
+                    <td class="text-right tabular-nums" data-label="Wert" style="font-weight: 700; font-size: 15px;">{{ overview.cash_total|eur }}</td>
+                    <td data-label="Zinssatz"></td>
+                    <td data-label="Typ"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endif %}
 
@@ -216,13 +220,13 @@
                     <th>Name</th>
                     <th>Ticker</th>
                     <th class="text-right">Kurs</th>
-                    <th class="text-right">Buy-In</th>
+                    <th class="text-right hide-on-phone">Buy-In</th>
                     <th class="text-right">Wert</th>
                     <th class="text-right">P&L</th>
-                    <th class="text-right">1M</th>
-                    <th class="text-right">6M</th>
-                    <th class="text-right">1Y</th>
-                    <th>Sektor</th>
+                    <th class="text-right hide-on-phone">1M</th>
+                    <th class="text-right hide-on-phone">6M</th>
+                    <th class="text-right hide-on-phone">1Y</th>
+                    <th class="hide-on-phone">Sektor</th>
                 </tr>
             </thead>
             <tbody>
@@ -231,21 +235,21 @@
                     <td class="primary">{{ pos.name }}</td>
                     <td data-label="Ticker"><span class="ticker-badge">{{ pos.ticker or '–' }}</span></td>
                     <td class="text-right tabular-nums" data-label="Kurs">{{ pos.current_price_eur|eur }}</td>
-                    <td class="text-right text-muted tabular-nums" data-label="Buy-In">{{ pos.buy_in_eur|eur }}</td>
+                    <td class="text-right text-muted tabular-nums hide-on-phone" data-label="Buy-In">{{ pos.buy_in_eur|eur }}</td>
                     <td class="text-right tabular-nums" data-label="Wert" style="font-weight: 600;">{{ pos.current_value_eur|eur }}</td>
                     <td class="text-right tabular-nums {{ 'positive' if pos.pnl_pct >= 0 else 'negative' }}" data-label="P&L">
                         {{ pos.pnl_pct|pct }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1m_pct and pos.perf_1m_pct >= 0 else 'negative' if pos.perf_1m_pct else '' }}" data-label="1 Monat">
+                    <td class="text-right tabular-nums hide-on-phone {{ 'positive' if pos.perf_1m_pct and pos.perf_1m_pct >= 0 else 'negative' if pos.perf_1m_pct else '' }}" data-label="1 Monat">
                         {{ pos.perf_1m_pct|pct if pos.perf_1m_pct is not none else '–' }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_6m_pct and pos.perf_6m_pct >= 0 else 'negative' if pos.perf_6m_pct else '' }}" data-label="6 Monate">
+                    <td class="text-right tabular-nums hide-on-phone {{ 'positive' if pos.perf_6m_pct and pos.perf_6m_pct >= 0 else 'negative' if pos.perf_6m_pct else '' }}" data-label="6 Monate">
                         {{ pos.perf_6m_pct|pct if pos.perf_6m_pct is not none else '–' }}
                     </td>
-                    <td class="text-right tabular-nums {{ 'positive' if pos.perf_1y_pct and pos.perf_1y_pct >= 0 else 'negative' if pos.perf_1y_pct else '' }}" data-label="1 Jahr">
+                    <td class="text-right tabular-nums hide-on-phone {{ 'positive' if pos.perf_1y_pct and pos.perf_1y_pct >= 0 else 'negative' if pos.perf_1y_pct else '' }}" data-label="1 Jahr">
                         {{ pos.perf_1y_pct|pct if pos.perf_1y_pct is not none else '–' }}
                     </td>
-                    <td class="text-muted" data-label="Sektor" style="font-size: 11px;">{{ pos.sector or '–' }}</td>
+                    <td class="text-muted hide-on-phone" data-label="Sektor" style="font-size: 11px;">{{ pos.sector or '–' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -259,38 +263,25 @@
 const regionExposure = {{ overview.region_exposure|tojson }};
 const sectorBreakdown = {{ overview.sector_breakdown|tojson }};
 
-const regionLabels = Object.keys(regionExposure);
-const regionValues = Object.values(regionExposure);
-if (regionLabels.length > 0 && typeof ApexCharts !== 'undefined' && window.VeloraApex) {
+function renderPctDonut(elId, labels, values) {
+    if (!labels.length || typeof ApexCharts === 'undefined' || !window.VeloraApex) return;
     const base = window.VeloraApex.baseOptions();
-    new ApexCharts(document.getElementById('regionChart'), Object.assign({}, base, {
-        chart: Object.assign({}, base.chart, { type: 'donut', height: 280 }),
-        series: regionValues,
-        labels: regionLabels,
+    const dd = window.VeloraApex.donutDefaults();
+    new ApexCharts(document.getElementById(elId), Object.assign({}, base, {
+        chart: Object.assign({}, base.chart, { type: 'donut', height: window.VeloraApex.chartHeight('md') }),
+        series: values,
+        labels: window.VeloraApex.truncateLabels(labels),
         stroke: { colors: [VeloraChartTheme.bodyBg()], width: 2 },
-        plotOptions: { pie: { donut: { size: '62%' }, expandOnClick: true } },
-        legend: Object.assign({}, base.legend, { position: 'bottom', fontSize: '11px' }),
+        plotOptions: dd.plotOptions,
+        dataLabels: dd.dataLabels,
+        legend: Object.assign({}, base.legend, { position: 'bottom' }),
         tooltip: Object.assign({}, base.tooltip, {
             y: { formatter: v => v.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '%' }
         }),
     })).render();
 }
 
-const sectorLabels = Object.keys(sectorBreakdown);
-const sectorValues = Object.values(sectorBreakdown);
-if (sectorLabels.length > 0 && typeof ApexCharts !== 'undefined' && window.VeloraApex) {
-    const base = window.VeloraApex.baseOptions();
-    new ApexCharts(document.getElementById('sectorChart'), Object.assign({}, base, {
-        chart: Object.assign({}, base.chart, { type: 'donut', height: 280 }),
-        series: sectorValues,
-        labels: sectorLabels,
-        stroke: { colors: [VeloraChartTheme.bodyBg()], width: 2 },
-        plotOptions: { pie: { donut: { size: '62%' }, expandOnClick: true } },
-        legend: Object.assign({}, base.legend, { position: 'bottom', fontSize: '11px' }),
-        tooltip: Object.assign({}, base.tooltip, {
-            y: { formatter: v => v.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '%' }
-        }),
-    })).render();
-}
+renderPctDonut('regionChart', Object.keys(regionExposure), Object.values(regionExposure));
+renderPctDonut('sectorChart', Object.keys(sectorBreakdown), Object.values(sectorBreakdown));
 </script>
 {% endblock %}

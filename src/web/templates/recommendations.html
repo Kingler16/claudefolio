@@ -152,7 +152,7 @@
 <div class="card" style="margin-bottom: 24px;">
     <div class="card-title">Abgeschlossen</div>
     <div class="table-wrapper">
-        <table>
+        <table class="data-table-stack">
             <thead>
                 <tr>
                     <th>Datum</th>
@@ -165,10 +165,10 @@
             <tbody>
                 {% for rec in closed_recs %}
                 <tr>
-                    <td class="text-muted">{{ rec.date[:10] if rec.date else '–' }}</td>
-                    <td><span class="ticker-badge">{{ rec.ticker }}</span></td>
-                    <td>{{ rec.action|upper }}</td>
-                    <td>
+                    <td class="primary text-muted">{{ rec.date[:10] if rec.date else '–' }}</td>
+                    <td data-label="Ticker"><span class="ticker-badge">{{ rec.ticker }}</span></td>
+                    <td data-label="Aktion">{{ rec.action|upper }}</td>
+                    <td data-label="Status">
                         <span class="rec-status {{ rec.status }}">
                             {% if rec.status == 'target_hit' %}Ziel erreicht
                             {% elif rec.status == 'executed' %}Ausgeführt
@@ -177,7 +177,7 @@
                             {% else %}{{ rec.status }}{% endif %}
                         </span>
                     </td>
-                    <td style="font-size: 12px; color: var(--text-muted);">{{ rec.outcome or '–' }}</td>
+                    <td data-label="Ergebnis" style="font-size: 12px; color: var(--text-muted);">{{ rec.outcome or '–' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

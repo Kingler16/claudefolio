@@ -70,16 +70,9 @@
         padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + var(--space-4));
     }
 
-    /* Burger-Menu respektiert Notch */
-    .mobile-toggle {
-        top: max(10px, calc(var(--safe-top) + 6px));
-        left: max(10px, calc(var(--safe-left) + 4px));
-        min-width: 44px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    /* Hamburger-Menu wird auf Phone NICHT mehr gebraucht — Bottom-Nav inkl.
+       "Mehr"-Sheet deckt alle Sidebar-Items ab. Reduziert Doppel-Navigation. */
+    .mobile-toggle { display: none; }
 
     /* Backdrop wenn Sidebar offen (Tap außerhalb schließt) */
     .sidebar-backdrop {

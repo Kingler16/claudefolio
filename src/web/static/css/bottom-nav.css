@@ -71,4 +71,89 @@
         text-transform: uppercase;
         letter-spacing: 0.4px;
     }
+
+    /* "Mehr"-Button hat keinen href — Button-Defaults killen. */
+    button.bottom-nav-item {
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
+    }
 }
+
+/* ─── Mehr-Sheet: Bottom-Sheet mit Sidebar-Items, die nicht in die 5 Slots passen ── */
+
+.bottom-more-sheet {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
+    z-index: 46;
+    padding: 8px;
+    padding-left: max(8px, var(--safe-left));
+    padding-right: max(8px, var(--safe-right));
+    background: var(--glass-bg-strong);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid var(--glass-border-strong);
+    box-shadow: 0 -8px 24px rgba(3, 5, 16, 0.45);
+    flex-direction: column;
+    gap: 4px;
+    transform: translateY(8px);
+    opacity: 0;
+    transition: transform var(--dur-base) var(--ease-apple), opacity var(--dur-base) var(--ease-apple);
+}
+.bottom-more-sheet.open {
+    display: flex;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.bottom-more-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    min-height: 48px;
+    font-size: 15px;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+}
+.bottom-more-item:active {
+    background: var(--glass-bg);
+}
+.bottom-more-item.active {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+.bottom-more-item .icon {
+    display: inline-flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+.bottom-more-item.active .icon { color: var(--accent); }
+
+.bottom-more-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 5, 16, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 44;
+}
+body.bottom-more-open .bottom-more-backdrop { display: block; }
+
+/* Mehr-Sheet ist exklusiv Phone — auf Tablet+/Desktop gibt's die Sidebar. */
+@media (min-width: 768px) {
+    .bottom-more-sheet,
+    .bottom-more-backdrop { display: none !important; }
+}
+

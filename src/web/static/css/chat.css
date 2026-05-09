@@ -161,6 +161,39 @@
     min-height: 48px;
 }
 
+/* Threads-Toggle: Phone-only Burger fuer past-chats. Auf Tablet+ unsichtbar,
+   weil dort die chat-sidebar permanent neben Main steht. */
+.chat-threads-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.chat-threads-toggle:hover { color: var(--text-primary); }
+
+.chat-sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 5, 16, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99;
+}
+body.chat-sidebar-open .chat-sidebar-backdrop { display: block; }
+
+@media (max-width: 767.98px) {
+    .chat-threads-toggle { display: inline-flex; }
+}
+
 .chat-header-title {
     font-size: var(--text-base);
     font-weight: 600;

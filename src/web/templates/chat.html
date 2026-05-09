@@ -36,12 +36,17 @@
 
     <main class="chat-main">
         <div class="chat-header">
+            <button type="button" class="chat-threads-toggle" aria-label="{{ t.chat.title }}"
+                    onclick="(function(){var s=document.querySelector('.chat-sidebar');var b=document.body;var open=!s.classList.contains('mobile-open');s.classList.toggle('mobile-open',open);b.classList.toggle('chat-sidebar-open',open);})()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <div id="chat-header-title" class="chat-header-title">Velora</div>
             <div class="chat-header-actions">
                 <button id="chat-pin-toggle" class="chat-header-btn" title="{{ t.chat.pin }}">☆ {{ t.chat.pin }}</button>
                 <button id="chat-delete-btn" class="chat-header-btn" title="{{ t.chat.delete }}">🗑 {{ t.chat.delete }}</button>
             </div>
         </div>
+        <div class="chat-sidebar-backdrop" onclick="document.querySelector('.chat-sidebar').classList.remove('mobile-open'); document.body.classList.remove('chat-sidebar-open');"></div>
 
         <div id="chat-messages" class="chat-messages">
             <!-- Messages werden via JS gerendert -->
@@ -70,4 +75,18 @@
 
 {% block scripts %}
 <script src="/static/js/chat.js" defer></script>
+<script>
+// Phone: Tap auf Thread-Item schliesst die Sidebar wieder. Delegation, damit
+// auch dynamisch gerenderte Threads erfasst werden.
+(function(){
+    var sidebar = document.querySelector('.chat-sidebar');
+    if (!sidebar) return;
+    sidebar.addEventListener('click', function(e){
+        if (!window.matchMedia('(max-width: 767.98px)').matches) return;
+        if (!e.target.closest('.chat-thread-item')) return;
+        sidebar.classList.remove('mobile-open');
+        document.body.classList.remove('chat-sidebar-open');
+    });
+})();
+</script>
 {% endblock %}

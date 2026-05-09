@@ -42,8 +42,8 @@
             </button>
             <div id="chat-header-title" class="chat-header-title">Velora</div>
             <div class="chat-header-actions">
-                <button id="chat-pin-toggle" class="chat-header-btn" title="{{ t.chat.pin }}">☆ {{ t.chat.pin }}</button>
-                <button id="chat-delete-btn" class="chat-header-btn" title="{{ t.chat.delete }}">🗑 {{ t.chat.delete }}</button>
+                <button id="chat-pin-toggle" class="chat-header-btn" title="{{ t.chat.pin }}" aria-label="{{ t.chat.pin }}">☆<span class="chat-header-btn-label"> {{ t.chat.pin }}</span></button>
+                <button id="chat-delete-btn" class="chat-header-btn" title="{{ t.chat.delete }}" aria-label="{{ t.chat.delete }}">🗑<span class="chat-header-btn-label"> {{ t.chat.delete }}</span></button>
             </div>
         </div>
         <div class="chat-sidebar-backdrop" onclick="document.querySelector('.chat-sidebar').classList.remove('mobile-open'); document.body.classList.remove('chat-sidebar-open');"></div>

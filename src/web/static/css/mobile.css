@@ -148,10 +148,11 @@
 
     /* Chat-Seite: main-content-Padding ausschalten, sonst summieren sich
        Padding (oben Safe-Top + Space, unten Bottom-Nav + Safe + Space) und
-       chat-layout-Hoehe zu mehr als 100dvh -> ungewollter Page-Scroll. */
+       chat-layout-Hoehe zu mehr als 100dvh -> ungewollter Page-Scroll.
+       Safe-Area-Top bringt der chat-header selbst mit. */
     body[data-page="chat"] .main-content {
         padding: 0;
-        animation: none;          /* page-enter Animation auf Chat nicht noetig */
+        animation: none;
     }
 
     .chat-layout {
@@ -160,6 +161,27 @@
         max-height: calc(100dvh - var(--bottom-nav-h) - var(--safe-bottom));
         overflow: hidden;
     }
+
+    /* chat-header beruecksichtigt iOS-Notch via safe-top und gibt links/
+       rechts Luft fuer Threads-Toggle und Action-Buttons. */
+    .chat-header {
+        padding-top: max(12px, calc(var(--safe-top) + 10px));
+        padding-left: max(12px, var(--safe-left));
+        padding-right: max(12px, var(--safe-right));
+        padding-bottom: 10px;
+        gap: 8px;
+    }
+
+    /* Action-Buttons (Anheften/Loeschen) als Icon-only auf Phone — sonst
+       brauchen sie zu viel Breite und kollidieren mit iOS-Statusbar-Icons.
+       Text-Label wird via .chat-header-btn-label-Span ausgeblendet. */
+    .chat-header-btn {
+        padding: 8px 10px;
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 14px;
+    }
+    .chat-header-btn-label { display: none; }
     .chat-sidebar { display: none; }
     .chat-sidebar.mobile-open {
         display: flex;
